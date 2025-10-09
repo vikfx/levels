@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Level Editor 0.0</title>
+
+	<link rel="stylesheet" href="./css/main.css">
+</head>
+<body>
+	<header id="main-header">
+		<form class="project">
+			<input type="submit" formaction="/api/project/" formmethod="GET" value="Open" class="button"></button>
+			<input type="submit" formaction="/api/project/" formmethod="POST" value="Save" class="button"></button>
+			<input type="submit" formaction="/api/export/" formmethod="GET" value="Export" class="button"></button>
+			<input type="submit" formaction="/api/import/" formmethod="POST" value="Import" class="button"></button>
+			<input type="text" name="project-name" value="" placeholder="nom du projet">
+			<div class="modal">
+				<div class="modal-content">
+					<input type="file" name="project-json">
+				</div>
+			</div>
+		</form>
+		
+		<h1>LEVEL EDITOR 0.0</h1>
+		
+		<form id="login" class="right-col">
+			<input type="password" name="api-key" value="" placeholder="api key">
+			<input type="submit" class="button" value="connexion">
+		</form>
+	</header>
+
+	<div id="page">
+		<aside id="sidebar">
+			<header>
+				<h2 id="current-level"></h2>
+				<ul id="coordonnees">
+					<li id="tile-x">x 0000</li>
+					<li id="tile-y">y 0000</li>
+				</ul>
+				<nav id="tabs-nav">
+					<a href="#level">Level</a>
+					<a class="on" href="#world">World</a>
+				</nav>
+			</header>
+			<section id="tabs">
+				<div id="level-mode" class="tab">
+					<h3>Tools</h3>
+					<ul id="history-tools" class="tools">
+						<li data-action="undo">undo</li>
+						<li data-action="redo">redo</li>
+					</ul>
+					<ul id="palette-tools" class="tools">
+						<li data-action="paint">pinceau</li>
+						<li data-action="erase">gomme</li>
+						<li data-action="select">selecteur</li>
+					</ul>
+
+					<div id="palettes">
+						<h3>Palettes</h3>
+						<nav>
+							<!-- <a href="#palette-###" class="on">###</a> -->
+						</nav>
+						<ul>
+							<!-- <li class="palette" id="palette-###">
+								<ul class="models">
+									<li id="###">
+										<h5>###</h5>
+										<img src="###">
+									</li>
+								</ul>
+							</li> -->
+						</ul>
+						
+						<form id="add-model">
+							<h4>Ajouter un modèle</h4>
+							<input type="text" name="model-name" value="" placeholder="nom du model">
+							<input type="text" name="model-slug" value="" placeholder="slug du model">
+							<input type="file" name="model-image">
+							<input type="submit" value="ajouter">
+						</form>
+						
+						<form id="add-palette">
+							<h4>Ajouter une palette</h4>
+							<input type="text" name="palette-name" value="" placeholder="nom de la palette">
+							<input type="text" name="palette-slug" value="" placeholder="slug de la palette">
+							<input type="submit" value="ajouter">
+						</form>
+					</div>
+
+					<div id="layers">
+						<h3>Layers</h3>
+						<ul>
+							<!-- <li class="layer" data-layer-id="XXX">
+								<h4>
+									<button data-action="visible">afficher</button>
+									<button data-action="locked">verrouiller</button>
+									<input type="text" value="XXX">
+									<button data-action="toggle">replier</button>
+									<button data-action="delete">supprimer</button>
+								</h4>
+								<ul class="tiles">
+									<li class="tile" data-x="0" data-y="0" data-ref="XXX" data-infos="">
+										<img src="XXX" alt="tile model">
+										<h5>XXX</h5>
+										<button data-action="select">select</button>
+										<button data-action="delete">supprimer</button>
+									</li>
+								</ul>
+							</li> -->
+						</ul>
+						<form id="add-layer">
+							<h4>Ajouter un layer</h4>
+							<input type="text" name="layer-name" value="" placeholder="nom du layer">
+							<input type="text" name="layer-slug" value="" placeholder="slug du layer">
+							<input type="submit" value="ajouter">
+						</form>
+					</div>
+				</div>
+
+				<div id="world-mode" class="tab on">
+					<!-- <h3>Tools</h3>
+					<ul id="world-tools" class="tools">
+						<li data-action="cut">decouper</li>
+						<li data-action="merge">regrouper</li>
+						<li data-action="select">selecteur</li>
+					</ul> -->
+
+					<div id="world">
+						<form id="world-size">
+							<h4>Taille de la map</h4>
+							<input type="number" name="grid-width" value="0">
+							<input type="number" name="grid-height" value="0">
+							<!-- <input type="submit" value="generer"> -->
+						</form>
+						
+						<button id="draw-world" data-action="draw">draw</button>
+
+						<!-- <div id="expand-grid">
+							<button data-action="add-left">ajouter une colonne à gauche</button>
+							<button data-action="add-right">ajouter une colonne à droite</button>
+							<button data-action="add-top">ajouter une ligne au dessus</button>
+							<button data-action="add-bottom">ajouter une ligne au dessous</button>
+						</div> -->
+					</div>
+
+					<div id="levels">
+						<h3>Levels</h3>
+						<ul>
+							<!-- <li class="level" data-level-id="XXX">
+								<h4><input type="text" value="XXX"></h4>
+								<button data-action="edit">edit</button>
+								<button data-action="draw">dessiner</button>
+								<button data-action="delete">supprimer</button>
+								<ul class="bounds">
+									<li>input type="text" name="top" value="XXX"</li>
+									<li>input type="text" name="bottom" value="XXX"</li>
+									<li>input type="text" name="left" value="XXX"</li>
+									<li>input type="text" name="right" value="XXX"</li>
+								</ul>
+							</li> -->
+						</ul>
+						
+						<!-- <form id="add-sublevel">
+							<h4>Ajouter une sous level</h4>
+							<input type="text" name="new-name" value="" placeholder="nom du sous level">
+							<input type="text" name="new-slug" value="" placeholder="slug du sous level">
+							<input type="submit" value="ajouter">
+						</form> -->
+						
+						<form id="add-level">
+							<h4>Ajouter un level</h4>
+							<input type="text" name="lvl-name" value="" placeholder="nom du level">
+							<input type="text" name="lvl-slug" value="" placeholder="slug du level">
+							<!-- <input type="text" name="lvl-parent" value="" placeholder="level parent"> -->
+							<input type="text" name="lvl-bounds[top]" value="" placeholder="bord top">
+							<input type="text" name="lvl-bounds[bottom]" value="" placeholder="bord bottom">
+							<input type="text" name="lvl-bounds[left]" value="" placeholder="bord left">
+							<input type="text" name="lvl-bounds[right]" value="" placeholder="bord right">
+							<input type="submit" value="ajouter">
+						</form>
+					</div>
+				</div>
+
+				
+				<!-- <div id="minimap">
+					<h3>Mini map</h3>
+					<canvas></canvas>
+				</div>	 -->
+				
+			</section>
+
+		</aside>
+		
+		<main id="main-content">
+			<canvas id="level-map"></canvas>
+			<canvas id="world-map" class="on"></canvas>
+			<nav></nav>
+		</main>
+
+		<div  id="welcome" class="modal on">
+			<div class="modal-content">
+				<h2>Bienvenue, par où voulez-vous commencer ?</h2>
+				<form class="project">
+					<input type="submit" formaction="/api/project/" formmethod="GET" value="ouvrir un projet" class="button"></button>
+					<input type="submit" formaction="/api/project/" formmethod="POST" value="nouveau projet" class="button"></button>
+					<input type="submit" formaction="/api/import/" formmethod="POST" value="importer un projet" class="button"></button>
+					<input type="text" name="project-name" value="" placeholder="nom du projet">
+					<input type="file" name="project-json">
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script type="module" src="./js/main.js"></script>
+</body>
+</html>
