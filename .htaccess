@@ -1,0 +1,12 @@
+<Files ".env">
+    Require all denied
+</Files>
+
+RewriteEngine On
+
+# Si ce n'est pas un fichier ou dossier réel
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirige tout ce qui commence par /api/... vers rest.php
+RewriteRule ^api/(.*)$ rest.php?route=$1 [QSA,L]
