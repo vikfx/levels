@@ -131,6 +131,15 @@ export class Layer {
 		this.$el = $li
 	}
 
+	//convertir en tableau json
+	toJSON() {
+		return {
+			name 	: this.name,
+			slug 	: this.slug,
+			tiles 	: this.chunks.tilesJSON
+		}
+	}
+
 	//activer le layer
 	setActive() {
 		World.$containers.layers.querySelectorAll(':scope > li').forEach($li => {

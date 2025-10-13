@@ -9,7 +9,6 @@ export class Level {
 	height										//hauteur en tile du level
 	startX										//les coordonnées reelles du point à gauche
 	startY										//les coordonnées reelles du point en haut
-	//bounds										//bounding box du level en coordonnées de grille
 	layers										//les layers du level
 	parent										//slug du level parent
 	$el											//l'element html dans la tab monde
@@ -130,6 +129,17 @@ export class Level {
 
 		World.$containers.levels.appendChild($li)
 		this.$el = $li
+	}
+
+	//convertir en tableau json
+	toJSON() {
+		return {
+			name 	: this.name,
+			slug 	: this.slug,
+			parent 	: this.parent,
+			bounds 	: this.bounds,
+			layers 	: this.layers.map(ly => ly.toJSON())
+		}
 	}
 
 	//definir comme level à editer

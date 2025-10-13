@@ -18,11 +18,11 @@
 	--color-accent6:#2f4f4f;
 	
 	--button-border: solid 2px #786858;
-	--button-padding: 5px;
-	--button-gap: 2px;
-
-	--padding-small : 5px;
-	--padding-large : 10px 20px;
+	
+	--space-xs: 2px;
+	--space-s : 5px;
+	--space-m : 10px;
+	--space-l : 20px;
 
 	--main-height: calc(100vh - 53px);
 }
@@ -60,14 +60,14 @@ form {
 
 input {
     font-size: 18px;
-    padding: var(--button-padding);
+    padding: var(--space-s);
 }
 
 /*****
 HEADER
 *****/
 #main-header {
-	padding: var(--padding-small);
+	padding: var(--space-s);
 	background: var(--color-accent5);
 	display: flex;
 	justify-content: space-between;
@@ -76,14 +76,14 @@ HEADER
 
 #main-header .button, .modal .button {
 	border: var(--button-border);
-	padding: var(--button-padding);
+	padding: var(--space-s);
 	border-color: var(--color-accent0);
 	background-color: transparent;
 }
 
 /* #main-header .right-col {
 	display: flex;
-	gap: var(--button-gap);
+	gap: var(--space-xs);
 	justify-content: flex-end;
 } */
 
@@ -143,13 +143,13 @@ SIDEBAR
 }
 
 #current-level {
-	padding: var(--padding-large);
+	padding: var(--space-m) var(--space-l);
 	text-transform: uppercase;
 	min-height: 2.2em;
 }
 
 #coordonnees {
-	padding: var(--padding-large);
+	padding: var(--space-m) var(--space-l);
 	display: flex;
 	gap: 10px;
 	font-size: 30px;
@@ -157,16 +157,16 @@ SIDEBAR
 }
 
 #sidebar > header > nav {
-	padding: var(--padding-large);
+	padding: var(--space-m) var(--space-l);
 	padding-bottom: 0;
 	display: flex;
-	gap: var(--button-gap);
+	gap: var(--space-xs);
 	border-bottom: var(--button-border);
 }
 
 #sidebar > header > nav > a {
 	background-color: var(--color-accent1);
-	padding: var(--button-padding);
+	padding: var(--space-s);
 	margin-bottom: -2px;
 	text-decoration: none;
 }
@@ -184,7 +184,7 @@ SIDEBAR
 
 /***** tabs *****/
 #tabs {
-	padding: var(--padding-small);
+	padding: var(--space-s);
 	overflow: auto;
 	/* border: solid 5px var(--color-accent2); */
 }
@@ -200,12 +200,12 @@ SIDEBAR
 /* tools */
 .tools {
     display: flex;
-    gap: var(--button-gap);
+    gap: var(--space-xs);
 }
 
 .tools > li {
     border: var(--button-border);
-    padding: var(--button-padding);
+    padding: var(--space-s);
 }
 
 .tools > li.on {
@@ -218,21 +218,21 @@ SIDEBAR
 #page form input {
     display: block;
     width: 100%;
-    margin-bottom: var(--button-gap);
+    margin-bottom: var(--space-xs);
 }
 
 #page form h4{
     margin-top: -24px;
     margin-bottom: 5px;
     background-color: var(--color-accent2);
-    padding: 0 var(--padding-small);
+    padding: 0 var(--space-s);
     width: fit-content;
 }
 
 /* model tiles */
 .models {
 	display: grid;
-	gap: var(--button-gap);
+	gap: var(--space-m) var(--space-xs);
 	grid-template-columns: repeat(auto-fill, 64px);
 	grid-auto-rows: max-content;
 	justify-content: start;
@@ -260,21 +260,29 @@ SIDEBAR
 
 /* palettes en onglet */
 #palettes > nav {
-    display: flex;
-	gap: var(--button-gap);
-	margin-bottom: 10px;
+    /* display: flex; */
+	gap: var(--space-xs);
+	margin-bottom: var(--space-m);
+}
+
+#palettes > nav:after {
+    content: '';
+    clear: both;
+    display: block;
+	height: var(--space-xs);
 }
 
 #palettes > nav > a {
 	border: var(--button-border);
 	border-color: transparent;
-	padding: var(--button-padding);
+	padding: var(--space-s);
 	text-decoration: none;
+	float : left;
 }
 
+
+
 #palettes > nav > a.on {
-	/* border: var(--button-border);
-	padding: var(--button-padding); */
 	border-color: var(--color-accent1);
 }
 
@@ -290,8 +298,8 @@ SIDEBAR
 .layer h4 {
 	display: flex;
 	align-items: center;
-	gap: var(--button-gap);
-	padding: var(--padding-small);
+	gap: var(--space-xs);
+	padding: var(--space-s);
 }
 
 .layer.on h4 {
@@ -316,9 +324,9 @@ SIDEBAR
     border-bottom: var(--button-border);
     display: grid;
     grid-template-columns: 2fr 4fr 1fr 1fr;
-    gap: var(--button-gap);
-    padding: var(--padding-small);
-    margin-bottom: var(--button-gap);
+    gap: var(--space-xs);
+    padding: var(--space-s);
+    margin-bottom: var(--space-xs);
 	align-items : center;
 }
 
@@ -335,8 +343,8 @@ SIDEBAR
     grid-template-areas: 
 		"a a a b c"
 		"d d d d d";
-    gap: var(--button-gap);
-    padding: var(--padding-small);
+    gap: var(--space-xs);
+    padding: var(--space-s);
     margin-bottom: 20px;
 }
 
@@ -355,7 +363,7 @@ SIDEBAR
 .level .bounds {
 	grid-area: d;
 	display: flex;
-	gap: var(--button-gap);
+	gap: var(--space-xs);
 }
 
 .bounds li > * {

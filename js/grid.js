@@ -31,7 +31,8 @@ export class Grid {
 	//ajouter les events listener sur le canvas
 	addListeners() {
 		//clonage pour eviter le double listener
-		World.cloneEl([Grid.$containers.canvas].concat([...Settings.$containers.history]))
+		World.cloneEl([Grid.$containers.canvas])
+		World.cloneEl([...Settings.$containers.history])
 		
 		let $canvas = Grid.$containers.canvas
 		$canvas.getContext('2d').imageSmoothingEnabled = false
@@ -320,7 +321,6 @@ export class Grid {
 								if(!tile.layer.locked && tile.layer.visible) {
 									//supprimer la tile existante
 									tile.layer.removeTile(tile)
-									//tile.layer.offCanvas.eraseTile(tile)
 									removed.push(tile)
 									noTile = true
 								} else {
@@ -332,26 +332,18 @@ export class Grid {
 						//ajouter la tile
 						if(noTile) {
 							tile = action.layer.addTile(c, l, action.model.slug, this.tileHTML)
-							//tile.layer.offCanvas.drawTile(tile)
 							added.push(tile)
 						}
 						break
 						
 						//gommer
 						case 'erase' : 
-						// tile = layer.findTileAt(c, l)
-						// if(tile) {
-						// 	layer.removeTile(tile)
-						// 	tile.layer.offCanvas.eraseTile(tile)
-						// 	removed.push(tile)
-						// }
 						founds = this.level.layers.map(ly => ly.findTileAt(c, l))
 						founds.forEach(tile => {
 							if(tile) {
 								if(!tile.layer.locked && tile.layer.visible) {
 									//supprimer la tile existante
 									tile.layer.removeTile(tile)
-									// tile.layer.offCanvas.eraseTile(tile)
 									removed.push(tile)
 								}
 							}

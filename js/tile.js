@@ -33,8 +33,6 @@ export class Tile {
 		$li.dataset.y = this.y
 		$li.dataset.ref = this.ref
 		
-		//if(!model) throw new Error('ce model n\'existe pas')
-		
 		const $img = document.createElement('img')
 		if(this.model) $img.setAttribute('src', this.model.src)
 
@@ -67,8 +65,19 @@ export class Tile {
 		this.$el = $li
 	}
 
+	//convertir en tableau json
+	toJSON() {
+		return {
+			x 		: this.x,
+			y 		: this.y,
+			model 	: this.ref,
+			datas 	: this.datas
+		}
+	}
+
 	//renvoyer l'image lié à la tile
 	get model() {
+		if(!Model.getModelBySlug(this.ref)) return
 		return Model.getModelBySlug(this.ref).$img
 	}
 }

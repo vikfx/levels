@@ -1,5 +1,6 @@
 import { Settings } from './settings.js'
 import { Model } from './model.js'
+import { FetchAPI } from './fetchAPI.js'
 
 export class Palette {
 	name								//nicename de la palette
@@ -60,9 +61,45 @@ export class Palette {
 		const $a = document.createElement('a')
 		$a.href = '#palette-' + this.slug
 		$a.innerHTML = this.name
-		$a.addEventListener('click', (evt) => {
+		
+		let longclick = false
+		let timer
+		$a.addEventListener('click', (evt) => {evt.preventDefault()})
+		
+		$a.addEventListener('pointerdown', (evt) => {
 			evt.preventDefault()
+			
+			longclick = false
+			if(timer) clearTimeout(timer)
+			timer = setTimeout(() => { longclick = true }, 800)
+		})
+		
+		$a.addEventListener('pointerup', (evt) => {
+			evt.preventDefault()
+			
+			//rendre actif
 			if(this.$el) this.setActive()
+				
+			//supprimer le bouton
+			if(timer) clearTimeout(timer)
+			if(longclick) {
+				const ok = confirm('Voulez-vous supprimer cette palette ?')
+				if(ok) {
+					const pname = localStorage.getItem('projectName')
+					const url = FetchAPI.apiURL + 'project/' + pname + '/palette/' + this.slug
+
+					FetchAPI.fetch(url, 'DELETE', {}, output => {
+						console.log(output)
+
+						const pslug = output.palette
+						const settings = Settings.getInstance() 
+						const palette = settings.palettes.find(p => p.slug == pslug)
+						if(!palette) throw new Error('la palette ' + pslug + 'n\'existe pas')
+		
+						settings.removePalette(palette)
+					})
+				}
+			}
 		})
 
 		//creer le html de la palette

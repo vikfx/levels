@@ -17,6 +17,11 @@ export class Chunks {
 		return [...this.map.values()].flatMap(c => c.tiles)
 	}
 
+	get tilesJSON() {
+		if(!this.map) return []
+		return [...this.map.values()].flatMap(c => c.tiles.map(t => t.toJSON()))
+	}
+
 	//recuperer le zoom adapté au zoom reel
 	getZoom(dz) {
 		return this.bitmapZooms.find(z => z >= dz) ?? this.bitmapZooms[this.bitmapZooms.length - 1 ] ?? 1

@@ -48,6 +48,22 @@ function dispatch_request() {
 	foreach($routes as $r) {
 		if ($r["method"] !== $method) continue;
 
+		// echo '<pre>';
+		// var_dump($r);
+		// echo '</pre>';
+		
+		// echo '<pre>';
+		// var_dump($method);
+		// echo '</pre>';
+
+		// echo '<pre>';
+		// var_dump(preg_match("#^{$r['pattern']}$#", trim($route, "/"), $matches));
+		// echo '</pre>';
+		
+		// echo '<pre>';
+		// var_dump($matches);
+		// echo '</pre>';
+
 		if (preg_match("#^{$r['pattern']}$#", trim($route, "/"), $matches)) {
 			$found = true;
 
@@ -80,7 +96,7 @@ function dispatch_request() {
 
 	if (!$found) {
 		http_response_code(404);
-		echo json_encode(["error"=>"Route not found"]);
+		echo json_encode(["error"=>"Route not found", 'route' => $_GET['route'], 'method' => $_SERVER['REQUEST_METHOD']]);
 	}
 }
 
@@ -96,7 +112,7 @@ function authenticate() {
 
 	if (($_SESSION['api_key'] ?? '') !== API_KEY) {
 		http_response_code(401);
-		echo json_encode(["error"=>"Unauthorized"]);
+		echo json_encode(["error"=>"Unauthorized", "api_send" => $apiKey]);
 		exit;
 	}
 }

@@ -238,6 +238,15 @@ export class World {
 		})
 	}
 
+	//convertir en tableau json
+	toJSON() {
+		return {
+			width 	: this.width,
+			height 	: this.height,
+			levels 	: this.levels.map(lvl => lvl.toJSON())
+		}
+	}
+
 	//clone des elements
 	static cloneEl($els) {
 		$els.forEach($el => {

@@ -1,3 +1,4 @@
+import { FetchAPI } from './fetchAPI.js'
 import { Settings } from './settings.js'
 
 export class Model {
@@ -44,8 +45,46 @@ export class Model {
 
 		const $li = document.createElement('li')
 		$li.id = this.slug
-		$li.addEventListener('click', (evt) => {
+		let longclick = false
+		let timer		
+		$li.addEventListener('pointerdown', (evt) => {
+			evt.preventDefault()
+					
+			longclick = false
+			if(timer) clearTimeout(timer)
+			timer = setTimeout(() => { longclick = true }, 800)
+		})
+				
+		$li.addEventListener('pointerup', (evt) => {
+			evt.preventDefault()
+					
+			//rendre actif
 			this.setActive()
+						
+			//supprimer le bouton
+			if(timer) clearTimeout(timer)
+			if(longclick) {
+				const ok = confirm('Voulez-vous supprimer ce model?')
+				if(ok) {
+					const pname = localStorage.getItem('projectName')
+					const url = FetchAPI.apiURL + 'project/' + pname + '/palette/' + this.palette.slug + '/model/' + this.slug
+			
+					FetchAPI.fetch(url, 'DELETE', {}, output => {
+						console.log(output)
+			
+						const pslug = output.palette
+						const mslug = output.model
+						const settings = Settings.getInstance() 
+						const palette = settings.palettes.find(p => p.slug == pslug)
+						if(!palette) throw new Error('la palette ' + pslug + 'n\'existe pas')
+					
+						const model = palette.models.find(m => m.slug == mslug)
+						if(!model) throw new Error('le model ' + mslug + ' n\'existe pas')
+
+						palette.removeModel(model)
+					})
+				}
+			}
 		})
 
 		const $h = document.createElement('h5')
