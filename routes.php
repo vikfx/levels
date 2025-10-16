@@ -2,9 +2,6 @@
 
 //enregistrer les routes
 //authentification
-
-use WP_SMS\Gateway\firstpayamak;
-
 rest_route('authenticate', 'GET', 'check_authentication');
 
 // CRUD projet
