@@ -13,6 +13,7 @@ export class Level {
 	parent										//slug du level parent
 	$el											//l'element html dans la tab monde
 	minimap										//l'image du level
+	edited = false								//si le level a été modifié après son dernier enregistrement
 
 
 	//init
@@ -103,7 +104,7 @@ export class Level {
 			$lb.innerHTML = k
 
 			const $ib = document.createElement('input')
-			$ib.type = 'text'
+			$ib.type = 'number'
 			$ib.name = k
 			$ib.value = this.bounds[k]
 			$ib.addEventListener('change', evt => {
@@ -111,6 +112,8 @@ export class Level {
 				const b = this.bounds
 				b[$i.name] = $i.value
 				this.bounds = b
+
+				this.edited = true
 				World.getInstance().draw()
 			})
 

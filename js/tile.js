@@ -7,6 +7,7 @@ export class Tile {
 	datas			//les datas supplémentaires
 	$el				//l'element html
 	layer			//le layer parent de la tile
+	_name			//nom de la tile
 
 	constructor(x, y, model, layer) {
 		this.x = x
@@ -14,6 +15,15 @@ export class Tile {
 		this.ref = model
 		this.layer = layer
 		this.datas = {}
+		this.name = ''
+	}
+
+	get name() {
+		return (this._name != '') ? this._name : 'tile (' + this.x + ', ' + this.y + ')'
+	}
+
+	set name(value) {
+		this._name = value
 	}
 
 	//supprimer le html

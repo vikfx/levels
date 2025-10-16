@@ -4,19 +4,16 @@ import { TileHistory } from './history.js'
 
 export class Grid {
 	static instance			//instance du singleton
-	static chunkSize = 36		//la taille des chunks en largeur / hauteur
-	static bitmapZooms = [10, 50, 100]
+	//static chunkSize = 36		//la taille des chunks en largeur / hauteur
+	//static bitmapZooms = [10, 50, 100]
 	zoom					//niveau de zoom
 	zoomMin = 1				//zoom minimum
 	zoomMax = 100			//zoom maximum	
-	//batchSize = 30			//batch pour le dessin des layers
 	offset					//coordonnées x/y de la position du coin supérieur gauche du canvas dans la grille
-	//level					//level en cours d'edition
 	currentPos				//position x/y de la souris dans la grille
 	selection				//positions de la grille selectionnées
 	//selectedTiles			//les tiles selectionnées
 	multiTouch = false
-	tileHTML = false		//si le html des tiles doit être crée
 	history
 	
 	constructor() {
@@ -97,6 +94,7 @@ export class Grid {
 					tile.layer.addTile(tile)
 				})
 
+				this.level.edited = true
 				this.draw()
 			})
 		})
@@ -119,8 +117,6 @@ export class Grid {
 			if(!this.level || this.multiTouch) return
 
 			if(this.selection) {
-				// this.paintAction()
-
 				const sel = this.parseSelection()
 				
 				let action = {
@@ -297,7 +293,10 @@ export class Grid {
 	paintAction(sel, action) {
 		console.log('paint action')
 
-		if(!action.layer) return
+		if(!action.layer) {
+			alert('aucun calque selectionné')
+			return
+		}
 		if(action.layer.locked || !action.layer.visible) {
 			alert('le calque est verrouillé ou masqué')
 			return
@@ -331,7 +330,7 @@ export class Grid {
 
 						//ajouter la tile
 						if(noTile) {
-							tile = action.layer.addTile(c, l, action.model.slug, this.tileHTML)
+							tile = action.layer.addTile(c, l, action.model.slug)
 							added.push(tile)
 						}
 						break
@@ -365,6 +364,7 @@ export class Grid {
 			}
 		}
 
+		this.level.edited = true
 		this.draw()
 
 

@@ -91,97 +91,109 @@ function authenticate() {
 
 //requete sur le json
 function projectRequest() {
-	const $forms = document.querySelectorAll("form.project")
+	const msg = {
+		export 			: 'Récupere le dernier json sauvegardé. Pensez à sauvegarder avant l\'export',
+		import 			: 'Vous allez ecraser le level en cours. Êtes-vous sûr?',
+		projectGET		: 'Vous allez ecraser le level en cours. Êtes-vous sûr?',
+		projectSAVE		: 'Vous allez ecraser la dernière sauvegarde. Êtes-vous sûr?'
+	}
 
+	const $forms = document.querySelectorAll("form.project")
 	$forms.forEach($form => {
 		if(!$form) return
 		const $pname = $form.querySelector('input[name="project-name"]')
 		if(!$pname) return
 
 		//nom du dernier projet
-		if(localStorage.getItem('projectName'))
-			$pname.value = localStorage.getItem('projectName')
+		if(localStorage.getItem('projectName')) $pname.value = localStorage.getItem('projectName')
 
 		$form.addEventListener('submit', (evt) => {
 			evt.preventDefault()
-
+			
 			if($pname.value == "") return
-
-			let action = evt.submitter.formAction
-			const method = evt.submitter.formMethod.toUpperCase() ?? $form.method.toUpperCase() ?? 'GET'
-
-			if(action.endsWith("/")) action = action.slice(0, -1)
-			const actionName = action.split('/').pop()
-
-			let isOk;
-			let body = false;
-			switch(actionName) {
-				//exporter le json (/!\ le dernier sauvegardé)
+			
+			let action = evt.submitter.dataset.action
+			switch(action) {
+				//exporter le json en cours
 				case "export" :
-					//alerter sur le json
-					isOk = confirm('Récupere le dernier json sauvegardé. Pensez à sauvegarder avant l\'export')
 					break
 
 				//importer un json
 				case "import" :
-					isOk = confirm('vous allez ecraser le json existant. Êtes-vous sûr?')
-					body = new FormData($form)
 					break
 
-				//save/get le projet
-				case "project" :
-					if((method == 'POST' || method == 'PUT')) {
-						const world = levelDesign.world.toJSON()
-						body = {world}
-						console.log(body)
-						isOk = confirm('vous allez ecraser le dernier json sauvegardé. Êtes-vous sûr?')
-					} else {
-						isOk = confirm('vous allez ecraser le level en cours. Êtes-vous sûr?')
-					}
+				//recuperer le projet
+				case "projectGET" :
+					if(confirm(msg[action])) loadJSON($pname.value)
+					break
+
+				//sauver le projet
+				case "projectSAVE" : 
+					if(confirm(msg[action])) saveJSON($pname.value)
 					break
 
 				default :
-					isOk = false
 					break
-			}
-
-			//envoi de la requete
-			if(isOk) {
-				const url = action + '/' + $pname.value
-
-				FetchAPI.fetch(url, method, body, (output) => {
-					switch(output.action) {
-						//recuperer le json
-						case 'get_project' :
-							localStorage.setItem('projectName', output.project)
-							document.querySelectorAll('input[name="project-name"]').forEach($i => {
-								$i.value = output.project
-							})
-
-							loadJson(output.datas)
-							break
-
-						//json sauvé
-						case 'save_project' :
-							loadJson(output.datas)
-							break;
-					}
-				})
 			}
 		})
 	})
 }
 
+//recuperer le json
+function loadJSON(project) {
+	const url = FetchAPI.apiURL + 'project/' + project
+	FetchAPI.fetch(url, 'GET', null, (output) => {
+		localStorage.setItem('projectName', output.project)
+		document.querySelectorAll('input[name="project-name"]').forEach($i => {
+			$i.value = output.project
+		})
 
-//generer le json pour l'envoi
-// function generateJson() {
-// 	console.log('todo generer le json')
-// }
+		//loadJson(output)
+		if(output.datas.world.levels) {
+			Promise.all(
+				output.datas.world.levels.map((level) => {
+					const lurl = FetchAPI.apiURL + 'project/' + output.project + '/level/' + level
+					console.log('load ' + lurl)
+					return FetchAPI.fetch(lurl, 'GET', false)
+				})
+			).then(outputs => {
+				console.log(outputs)
+				output.datas.world.levels = outputs.map(o => JSON.parse(o.datas) )
+				console.log(output.datas.world.levels)
+				initMap(output.datas)
+			})
+		}
+
+	})
+
+}
+
+//sauver le json
+function saveJSON(project) {
+	//project
+	let url = FetchAPI.apiURL + 'project/' + project
+	let datas = levelDesign.world.toJSON()
+	FetchAPI.fetch(url, 'POST', {world : datas}, (output) => {
+		console.log(output)
+	})
+
+	//levels
+	levelDesign.world.levels.forEach(level => {
+		if(!level.edited) return
+
+		url = FetchAPI.apiURL + 'project/' + project + '/level/' + level.slug
+		datas = level.toJSON()
+		FetchAPI.fetch(url, 'POST', datas, (output) => {
+			console.log(output)
+			if(output.success) level.edited = false
+		})
+	})	
+}
 
 //charger un level
-function loadJson(json) {
+function initMap(json) {
 	console.log('load level')
-	//console.log(json)
+	console.log(json)
 
 	//charger dans le window
 	levelDesign = {

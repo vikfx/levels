@@ -2,7 +2,7 @@ export class FetchAPI {
 	static apiURL = '/api/'
 
 	//envoyer une requete sur l'api
-	static fetch(url, method, body, callback, error) {
+	static async fetch(url, method, body, callback, error) {
 		const datas = {
 			method : method
 		}
@@ -21,7 +21,7 @@ export class FetchAPI {
 			return
 		}
 
-		fetch(url, datas)
+		return (fetch(url, datas)
 		.then(res => res.json())
 		.then((output) => {
 			if(output.error) {
@@ -34,7 +34,7 @@ export class FetchAPI {
 					throw new Error(output.error)
 				}
 
-				if (typeof error === "function") {
+				if (typeof error === 'function') {
 					error(output)
 				}
 			}
@@ -45,12 +45,14 @@ export class FetchAPI {
 			} else {
 				//masquer la popup d'entrée
 				//hideWelcome()
-				if (typeof callback === "function") {
+				if (typeof callback === 'function') {
 					callback(output)
 				}
 			}
 
-		})
+			return output
+
+		}))
 	}
 
 	//requete d'authentification

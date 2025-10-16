@@ -10,10 +10,12 @@ session_start();
 
 //recupererla clé api
 $dotenv = parse_ini_file(__DIR__.'/.env');
-define('API_KEY', $dotenv['API_KEY']);
+define('API_KEY' , (isset($dotenv['API_KEY'])) ? $dotenv['API_KEY'] : '');
+define('DIR_PERMISSIONS' , (isset($dotenv['DIR_PERMISSIONS'])) ? octdec($dotenv['DIR_PERMISSIONS']) : 0700);
+define('FILE_PERMISSIONS' , (isset($dotenv['FILE_PERMISSIONS'])) ? octdec($dotenv['FILE_PERMISSIONS']) : 0600);
 
 //definir les chemins pour le json
-define('FILE_JSON' , 'level.json');
+define('FILE_JSON' , 'levels.json');
 define('UPLOAD_FOLDER' , __DIR__ . "/uploads/");
 
 //init les routes
@@ -176,6 +178,21 @@ function parse_route($route) {
 	}
 
 	return $params;
+}
+
+//formater une reponse de l'api
+function rest_response($datas, $status = 200) {
+	//statut
+	if($status != 200) {
+		http_response_code(500);
+	}
+
+	//header
+	header('Content-Type: application/json');
+
+	//response
+	echo json_encode($datas);
+	exit;
 }
 
 //inclure le routage

@@ -19,7 +19,7 @@ export class Layer {
 		this.name = name ?? slug
 		this.visible = true
 		this.locked = false
-		this.chunks = new Chunks(Grid.chunkSize, Grid.bitmapZooms) //new Map()
+		this.chunks = new Chunks()
 		this.level = level
 		tiles.forEach(t => {
 			return this.addTile(t.x, t.y, t.model)
@@ -32,7 +32,7 @@ export class Layer {
 		if(this.chunks)
 			this.chunks.forEachTiles(tile => { tile.clear() })
 		
-		this.chunks = new Chunks(Grid.chunkSize, Grid.bitmapZooms) //new Map()
+		this.chunks = new Chunks()
 
 		//supprimmer le html
 		const $layers = World.$containers.layers 
@@ -112,12 +112,6 @@ export class Layer {
 		$ul.classList.add('tiles')
 		this.$tileContainer = $ul
 
-		if(Grid.getInstance().tileHTML) {
-			this.forEachTiles(tile => {
-				tile.createHTML()
-			})
-		}
-
 		//montage html
 		$h.appendChild($visible)
 		$h.appendChild($locked)
@@ -155,7 +149,7 @@ export class Layer {
 	}
 
 	//ajouter une tile
-	addTile(x, y, model = false, html = false) {
+	addTile(x, y, model = false) {
 		let tile
 		if (x instanceof Tile) {
 			tile = x
@@ -174,8 +168,6 @@ export class Layer {
 			throw new Error('coordonnées en dehors des limites')
 
 		this.chunks.push(tile)
-		
-		if(html) tile.createHTML()
 		
 		return tile
 	}

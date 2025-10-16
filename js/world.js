@@ -105,7 +105,7 @@ export class World {
 			else if (this.levels.findIndex(lvl => lvl.slug == datas.slug) >= 0)
 				alert('un level avec ce slug existe déjà')
 			else
-				this.addLevel(datas)
+				this.addLevel(datas).edited = true
 		})
 
 		//ajouter/modifier un layer
@@ -146,15 +146,13 @@ export class World {
 			throw new Error('le level est en dehors des limites du monde')
 		}
 
-		console.log(lvl)
-		if(this.levels.find(level => level.slug == lvl.slug)) {
+		if(this.levels.find(level => level.slug == lvl.slug))
 			throw new Error('un level avec le slug ' + lvl.slug + ' existe déjà')
-		} else {
-			const level = new Level(lvl.name, lvl.slug, lvl.parent, lvl.bounds, lvl.layers)
-			this.levels.push(level)
-			this.draw()
-		}
-
+		
+		const level = new Level(lvl.name, lvl.slug, lvl.parent, lvl.bounds, lvl.layers)
+		this.levels.push(level)
+		this.draw()
+		return level
 	}
 
 	//supprimer un level
@@ -190,6 +188,12 @@ export class World {
 		//clear
 		ctx.clearRect(0, 0, $canvas.width, $canvas.height)
 
+		//dessiner le contour du monde
+		ctx.strokeStyle = '#CC00CC'
+		ctx.lineWidth = 3
+		ctx.strokeRect(0, 0, this.width * size, this.height * size)
+
+
 		//dessiner les levels
 		ctx.strokeStyle = '#CCCC00'
 		ctx.fillStyle = '#CCCC00'
@@ -203,9 +207,7 @@ export class World {
 
 			//minimap
 			const mm = level.minimap
-			if(mm) {
-				ctx.drawImage(mm, 0, 0, mm.width, mm.height, x, y, w, h)
-			}
+			if(mm) ctx.drawImage(mm, 0, 0, mm.width, mm.height, x, y, w, h)
 
 			//contour + txt
 			ctx.strokeRect(x, y, w, h)
@@ -213,7 +215,7 @@ export class World {
 		})
 	}
 
-	//dessiner le level
+	//dessiner l'interieur du level
 	drawLevel(level) {
 		if(!level) return
 		if(level.minimap) level.minimap.close?.()
@@ -239,11 +241,12 @@ export class World {
 	}
 
 	//convertir en tableau json
-	toJSON() {
+	toJSON(withLevels = false) {
 		return {
 			width 	: this.width,
 			height 	: this.height,
-			levels 	: this.levels.map(lvl => lvl.toJSON())
+			//levels 	: this.levels.map(lvl => (lvl.edited) ? lvl.toJSON() : lvl.slug)
+			levels 	: this.levels.map(lvl => (withLevels) ? lvl.toJSON() : lvl.slug)
 		}
 	}
 

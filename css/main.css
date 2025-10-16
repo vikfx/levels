@@ -59,9 +59,13 @@ form {
 }
 
 input {
-    font-size: 18px;
+	font-size: 18px;
     padding: var(--space-s);
 }
+
+/* input, button, select {
+    font-size: 1em;
+} */
 
 /*****
 HEADER
@@ -79,6 +83,7 @@ HEADER
 	padding: var(--space-s);
 	border-color: var(--color-accent0);
 	background-color: transparent;
+	font-size: 1em;
 }
 
 /* #main-header .right-col {
@@ -132,7 +137,7 @@ SIDEBAR
 	color: var(--color-accent1);
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
+	justify-content: flex-start;
 	max-height: var(--main-height);
 	width: 300px;
 }

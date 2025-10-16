@@ -1,13 +1,11 @@
 export class Chunks {
-	map				//le mapping des tiles
-	chunkSize		//la taille des chunks en largeur / hauteur
-	bitmapZooms		//les niveau de zooms pour la creation des bitmaps
+	map								//le mapping des tiles
+	chunkSize = 36					//la taille des chunks en largeur / hauteur
+	bitmapZooms = [10, 50, 100]		//les niveau de zooms pour la creation des bitmaps
 
 	//init
-	constructor(size, zooms) {
-		this.chunkSize = size
-		this.bitmapZooms = zooms
-
+	constructor() {
+		//this.chunkSize = size
 		this.map = new Map()
 	}
 
@@ -17,6 +15,7 @@ export class Chunks {
 		return [...this.map.values()].flatMap(c => c.tiles)
 	}
 
+	//renvoyer toutes les tiles formatée pour le JSON
 	get tilesJSON() {
 		if(!this.map) return []
 		return [...this.map.values()].flatMap(c => c.tiles.map(t => t.toJSON()))
