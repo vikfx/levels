@@ -171,7 +171,7 @@ export class Chunks {
 			ctx.drawImage(tile.model, pos.x * z, pos.y * z, z, z)
 	}
 
-	//dessiner un chunk
+	//dessiner un chunk dans un canvas et renvoyer le canvas
 	drawChunk(chunk, z) {
 		const size = this.chunkSize * z
 		

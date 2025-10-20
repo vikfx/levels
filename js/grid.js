@@ -1,27 +1,28 @@
 import { Settings } from './settings.js'
 import { World } from './world.js'
-import { TileHistory } from './history.js'
+import { History } from './history.js'
+import { Datas } from './datas.js'
 
 export class Grid {
 	static instance			//instance du singleton
-	//static chunkSize = 36		//la taille des chunks en largeur / hauteur
-	//static bitmapZooms = [10, 50, 100]
+
 	zoom					//niveau de zoom
 	zoomMin = 1				//zoom minimum
-	zoomMax = 100			//zoom maximum	
+	zoomMax = 100			//zoom maximum
 	offset					//coordonnées x/y de la position du coin supérieur gauche du canvas dans la grille
 	currentPos				//position x/y de la souris dans la grille
 	selection				//positions de la grille selectionnées
-	//selectedTiles			//les tiles selectionnées
-	multiTouch = false
-	history
-	
+	selectedTiles			//les tiles selectionnées
+	multiTouch = false		//si plusieurs touches sont enregistrées
+	history					//l'historique du paint
+
+	//init
 	constructor() {
 		this.offset = {x: 0, y: 0}
 		this.setZoom(10)
 		this.addListeners()
-		this.history = new TileHistory()
-		
+		this.history = new History()
+
 		Grid.instance = this
 	}
 
@@ -30,14 +31,14 @@ export class Grid {
 		//clonage pour eviter le double listener
 		World.cloneEl([Grid.$containers.canvas])
 		World.cloneEl([...Settings.$containers.history])
-		
+
 		let $canvas = Grid.$containers.canvas
 		$canvas.getContext('2d').imageSmoothingEnabled = false
 
 		//resize du canvas
 		$canvas.addEventListener('canvasResized', evt => {
 			if(!this.level) return
-			
+
 			this.draw()
 		})
 
@@ -70,10 +71,10 @@ export class Grid {
 						toAdd = (tiles) ? tiles.removed : []
 						toRemove = (tiles) ? tiles.added : []
 						break
-					
+
 					//redo
 					case 'redo' :
-						tiles = this.history.next() 
+						tiles = this.history.next()
 						toAdd = (tiles) ? tiles.added : []
 						toRemove = (tiles) ? tiles.removed : []
 						break
@@ -118,7 +119,7 @@ export class Grid {
 
 			if(this.selection) {
 				const sel = this.parseSelection()
-				
+
 				let action = {
 					name : Settings.getInstance().currentTool,
 					layer : this.level.currentLayer,
@@ -128,6 +129,9 @@ export class Grid {
 				const tiles = this.paintAction(sel, action)
 				this.history.push(tiles)
 				this.selection = false
+
+				const detail = { tiles, action }
+				$canvas.dispatchEvent(new CustomEvent('paintAction', { detail: detail }))
 			}
 		})
 
@@ -137,7 +141,7 @@ export class Grid {
 
 			//position courante
 			this.setCurrentPos(this.pixelToGrid(evt.offsetX, evt.offsetY))
-			
+
 			//cadre de selection
 			if (this.selection) {
 				this.selection.end = this.pixelToGrid(evt.offsetX, evt.offsetY)
@@ -152,13 +156,28 @@ export class Grid {
 			this.selection = false
 			this.draw()
 		})
+
+
+		//$canvas = Grid.$containers.canvas
+		$canvas.addEventListener('paintAction', evt => {
+			//selection
+			console.log('paint ' + evt.detail.action.name)
+			console.log(evt.detail.tiles)
+			this.selectedTiles = evt.detail.tiles.selected
+			if(this.selectedTiles.length > 0) {
+				const tile = this.selectedTiles[0]
+				tile.setDatasHTML()
+			} else {
+				Datas.clearHTML()
+			}
+		})
 	}
 
 	//gestion d'event pour le pan/zoom
 	addPanZoomListeners($canvas) {
 		let lastDist = null
 		let lastPos = null
-		
+
 		////touches
 		//entrée de drag
 		$canvas.addEventListener('touchstart', evt => {
@@ -184,7 +203,7 @@ export class Grid {
 		//drag
 		$canvas.addEventListener('touchmove', evt => {
 			if(!this.level || !this.multiTouch) return
-			
+
 			const [t1, t2] = evt.touches
 
 			// distance actuelle (pour zoom)
@@ -208,22 +227,22 @@ export class Grid {
 						const b = this.bounds
 						pos.x -= Math.floor((b.right - b.left) / 2)
 						pos.y -= Math.floor((b.bottom - b.top) / 2)
-						
+
 						this.offset = this.level.clampPos(pos.x, pos.y)
 					}
-					
+
 					lastDist = dist
 				}
 			} else {
 				lastDist = dist
 			}
-			
+
 			// pan
 			if(lastPos) {
 				const delta = {}
 				delta.x = lastPos.x - pos.x
 				delta.y = lastPos.y - pos.y
-				
+
 				const incX = delta.x / this.zoom
 				const incY = delta.y / this.zoom
 				if(Math.abs(incX) >= 1 || Math.abs(incY) >= 1) {
@@ -237,7 +256,7 @@ export class Grid {
 			//redessiner les canvas
 			this.draw()
 		}, { passive: false })
-		
+
 		////mouse
 		//entrée de drag pan
 		let mouseR
@@ -247,28 +266,28 @@ export class Grid {
 				lastPos = { x: evt.clientX, y: evt.clientY }
 			}
 		})
-		
+
 		//drag pan
 		$canvas.addEventListener('pointermove', evt => {
 			if(mouseR) {
 				const delta = {}
 				delta.x = lastPos.x - evt.clientX
 				delta.y = lastPos.y - evt.clientY
-				
+
 				const incX = delta.x / this.zoom
 				const incY = delta.y / this.zoom
 				if(Math.abs(incX) >= 1 || Math.abs(incY) >= 1) {
 					this.offset = this.level.clampPos(this.offset.x + incX, this.offset.y + incY)
 					lastPos = { x: evt.clientX, y: evt.clientY }
 				}
-				
+
 				this.draw()
 			}
 		})
-		
+
 		//sortie de drag pan
 		$canvas.addEventListener('pointerup', () => mouseR = false)
-		
+
 		//molette zoom
 		$canvas.addEventListener("wheel", evt => {
 			if(!this.level) return
@@ -281,18 +300,16 @@ export class Grid {
 				const b = this.bounds
 				pos.x -= Math.floor((b.right - b.left) / 2)
 				pos.y -= Math.floor((b.bottom - b.top) / 2)
-				
+
 				this.offset = this.level.clampPos(pos.x, pos.y)
 			}
-			
+
 			this.draw()
 		}, { passive: false })
 	}
 
 	//appliquer l'action en sortie de selection
 	paintAction(sel, action) {
-		console.log('paint action')
-
 		if(!action.layer) {
 			alert('aucun calque selectionné')
 			return
@@ -301,7 +318,7 @@ export class Grid {
 			alert('le calque est verrouillé ou masqué')
 			return
 		}
-		
+
 		const removed = []
 		const added = []
 		const selected = []
@@ -334,9 +351,9 @@ export class Grid {
 							added.push(tile)
 						}
 						break
-						
-						//gommer
-						case 'erase' : 
+
+					//gommer
+					case 'erase' :
 						founds = this.level.layers.map(ly => ly.findTileAt(c, l))
 						founds.forEach(tile => {
 							if(tile) {
@@ -348,9 +365,9 @@ export class Grid {
 							}
 						})
 						break
-						
+
 					//selectionner
-					case 'select' : 
+					case 'select' :
 						tile = action.layer.findTileAt(c, l)
 						if(tile) {
 							selected.push(tile)
@@ -358,7 +375,7 @@ export class Grid {
 						break
 
 					//defaut
-					default : 
+					default :
 						break
 				}
 			}
@@ -367,13 +384,12 @@ export class Grid {
 		this.level.edited = true
 		this.draw()
 
-
 		const tiles = {
 			removed,
 			added,
 			selected
 		}
-		console.log(tiles)
+
 		return tiles
 	}
 
@@ -405,23 +421,24 @@ export class Grid {
 			h
 		}
 	}
-	
+
 	//recuperer le level en cours
 	get level() {
 		return World.getInstance().currentLevel
 	}
-	
+
 	//attribuer le level en cours
 	set level(level) {
 		console.log(level)
 		World.getInstance().currentLevel = level
+		Datas.clearHTML()
 
 		if(level) {
 			this.history.reset()
 			this.setZoom(10)
 			this.offset = level.clampPos(0, 0)
 		}
-	
+
 		this.draw()
 	}
 
@@ -446,7 +463,7 @@ export class Grid {
 	gridToPixel(x, y, tileSize) {
 		if(!this.level) return {x : 0, y: 0}
 
-		let px = (x - this.offset.x) * tileSize 
+		let px = (x - this.offset.x) * tileSize
 		let py = (y - this.offset.y) * tileSize
 
 		return {
@@ -458,10 +475,7 @@ export class Grid {
 	//renvoyer les limites de la grille à afficher dans le canvas
 	get bounds() {
 		const $canvas = Grid.$containers.canvas
-
 		const br = this.pixelToGrid($canvas.offsetWidth, $canvas.offsetHeight)
-
-		// console.log('bounds left: ' + this.offset.x + ', right: ' + br.x + ', top: ' + this.offset.y + ', bottom: ' +  br.y)
 
 		return {
 			left: this.offset.x,
@@ -481,53 +495,190 @@ export class Grid {
 		const ctx = $canvas.getContext('2d')
 		ctx.clearRect(0, 0, $canvas.width, $canvas.height)
 	}
-	
+
 	//dessiner le canvas
 	draw() {
-		const ctx = Grid.ctx
-		const bo = this.bounds
-		const z = this.zoom
-		
 		//clear
 		this.clearCanvas(Grid.$containers.canvas)
 
 		if(!this.level) return
-		
+
 		//dessiner le calque enregistré
 		this.level.layers.forEach(layer => {
 			if(!layer.visible) return
-			layer.draw(bo, z, ctx)
+			layer.draw(this.bounds, this.zoom, Grid.ctx)
+
+			layer.relations.forEach(r => this.drawRelation(r))
+			layer.pathes.forEach(p => this.drawPath(p))
 		})
 
 		//dessiner la bordure du niveau
-		ctx.strokeStyle = '#CCCC00'
-		ctx.lineWidth = 1
-		ctx.strokeRect(0, 0, (bo.right - bo.left + 1) * z, (bo.bottom - bo.top + 1) * z)
+		this.drawBorders()
 
 		//dessiner les curseurs
-		const color = '#DD0066'
+		this.drawCursors()
+
+		//dessiner la tile selectionnée
+		this.drawSelected()
+	}
+
+	//dessiner la bordure du level
+	drawBorders() {
+		const ctx = Grid.ctx
+		const bo = this.bounds
+		const z = this.zoom
+
+		ctx.strokeStyle = Grid.styles.border.color
+		ctx.lineWidth = Grid.styles.border.width
+		ctx.strokeRect(0, 0, (bo.right - bo.left + 1) * z, (bo.bottom - bo.top + 1) * z)
+	}
+
+	//dessiner le curseur
+	drawCursors() {
+		const ctx = Grid.ctx
+		const z = this.zoom
+
 		if(this.selection) {
 			const s = this.parseSelection()
 			const origin = this.gridToPixel(s.x, s.y, z)
 
-			ctx.fillStyle = color
+			ctx.fillStyle = Grid.styles.cursor.color
 			ctx.fillRect(origin.x, origin.y, s.w * z, s.h * z)
 		} else if(this.currentPos) {
-			ctx.strokeStyle = color
-			ctx.lineWidth = 3
+			ctx.strokeStyle = Grid.styles.cursor.color
+			ctx.lineWidth = Grid.styles.cursor.width
 			const pos = this.gridToPixel(this.currentPos.x, this.currentPos.y, z)
 			ctx.strokeRect(pos.x, pos.y, z, z)
 		}
 	}
 
+	//dessiner la premiere tile selectionnée
+	drawSelected() {
+		const ctx = Grid.ctx
+		const z = this.zoom
+
+		if(!ctx) ctx = Grid.ctx
+		if(this.selectedTiles && this.selectedTiles.length > 0) {
+			const t = this.selectedTiles[0]
+
+			ctx.strokeStyle = Grid.styles.selected.color
+			ctx.lineWidth = Grid.styles.selected.width
+			const pos = this.gridToPixel(t.x, t.y, z)
+			ctx.strokeRect(pos.x, pos.y, z, z)
+		}
+	}
+
+	//dessiner une relation
+	drawRelation(relation) {
+		const ctx = Grid.ctx
+		const bo = this.bounds
+		const z = this.zoom
+		
+		const ta = relation[0]
+		const tb = relation[1]
+		
+		if(!Grid.inBounds(ta.position, bo) && !Grid.inBounds(tb.position, bo)) return
+		
+		const a = this.gridToPixel(ta.x, ta.y, z)
+		const b = this.gridToPixel(tb.x, tb.y, z)
+		a.x += z/2
+		a.y += z/2
+		b.x += z/2
+		b.y += z/2
+		
+		ctx.strokeStyle = Grid.styles.relation.color
+		ctx.lineWidth = Grid.styles.relation.width * (z / this.zoomMax)
+		ctx.beginPath()
+		ctx.moveTo(a.x, a.y)
+		ctx.lineTo(b.x, a.y)
+		ctx.lineTo(b.x, b.y)
+		ctx.stroke()
+
+		ctx.fillStyle = Grid.styles.relation.color
+		const s = z * Grid.styles.relation.square		//demi largeur du carre d'extremité
+		ctx.fillRect(a.x - s, a.y - s, s * 2, s * 2)
+		ctx.fillRect(b.x - s, b.y - s, s * 2, s * 2)
+	}
+
+	//dessiner un path
+	drawPath(path) {
+		const ctx = Grid.ctx
+		const bo = this.bounds
+		const z = this.zoom
+
+		if(!Grid.inBounds(path.tile, bo)) return
+		
+		ctx.strokeStyle = Grid.styles.path.color
+		ctx.lineWidth = Grid.styles.path.width * (z / this.zoomMax)
+		ctx.beginPath()
+		path.path.forEach((point, i) => {
+			const pos = this.gridToPixel(point.x, point.y, z)
+			pos.x += z/2
+			pos.y += z/2
+			if(i == 0) ctx.moveTo(pos.x, pos.y)
+			else ctx.lineTo(pos.x, pos.y)
+		})
+		ctx.stroke()
+
+		let p = path.path[0]
+		const a = this.gridToPixel(p.x, p.y, z)
+		p = path.path[path.path.length - 1]
+		const b = this.gridToPixel(p.x, p.y, z)
+		a.x += z/2
+		a.y += z/2
+		b.x += z/2
+		b.y += z/2
+		ctx.fillStyle = Grid.styles.path.color
+		const s = z * Grid.styles.path.square		//demi largeur du carre d'extremité
+
+		ctx.beginPath();
+		ctx.ellipse(a.x, a.y, s, s, 0, 0, 2 * Math.PI);
+		ctx.fill()
+		
+		ctx.beginPath();
+		ctx.ellipse(b.x, b.y, s, s, 0, 0, 2 * Math.PI);
+		ctx.fill()
+	}
+
 	//verifier que les coordonnées x/y sont dans le bounds
 	static inBounds(pos, bounds) {
 		return (
-			pos.x >= bounds.left 
-			&& pos.x <= bounds.right 
-			&& pos.y >= bounds.top 
+			pos.x >= bounds.left
+			&& pos.x <= bounds.right
+			&& pos.y >= bounds.top
 			&& pos.y <= bounds.bottom
 		)
+	}
+
+	//styles deselements dans le canvas
+	static get styles() {
+		return {
+			background	: {
+				color		: '#FF0000'
+			},
+			border 		: {
+				color 		: '#CCCC00',
+				width 		: 5
+			},
+			cursor 		: {
+				color 		: '#DD0066',
+				width 		: 3
+			},
+			selected 	: {
+				color 		: '#22DD00',
+				width 		: 3
+			},
+			relation 	: {
+				color 		: '#CCCC00',
+				width 		: 3,
+				square 		: .1	
+			},
+			path 		: {
+				color 		: '#00CCCC',
+				width 		: 3,
+				square 		: .05
+			}
+		}
 	}
 
 	//recuperer l'instance du singleton
@@ -540,7 +691,7 @@ export class Grid {
 	static get $containers() {
 		const $canvas = document.querySelector('#level-map')
 		if(!$canvas) throw new Error('impossible de charger le canvas')
-			
+
 		return {
 			canvas : $canvas,
 		}

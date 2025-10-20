@@ -98,6 +98,8 @@ function projectRequest() {
 		projectSAVE		: 'Vous allez ecraser la dernière sauvegarde. Êtes-vous sûr?'
 	}
 
+	FetchAPI.$loader.hidden = true
+
 	const $forms = document.querySelectorAll("form.project")
 	$forms.forEach($form => {
 		if(!$form) return
@@ -142,24 +144,23 @@ function projectRequest() {
 //recuperer le json
 function loadJSON(project) {
 	const url = FetchAPI.apiURL + 'project/' + project
+	FetchAPI.$loader.hidden = false
 	FetchAPI.fetch(url, 'GET', null, (output) => {
 		localStorage.setItem('projectName', output.project)
 		document.querySelectorAll('input[name="project-name"]').forEach($i => {
 			$i.value = output.project
 		})
-
+		
 		//loadJson(output)
 		if(output.datas.world.levels) {
 			Promise.all(
 				output.datas.world.levels.map((level) => {
 					const lurl = FetchAPI.apiURL + 'project/' + output.project + '/level/' + level
-					console.log('load ' + lurl)
 					return FetchAPI.fetch(lurl, 'GET', false)
 				})
 			).then(outputs => {
-				console.log(outputs)
+				FetchAPI.$loader.hidden = true
 				output.datas.world.levels = outputs.map(o => JSON.parse(o.datas) )
-				console.log(output.datas.world.levels)
 				initMap(output.datas)
 			})
 		}
@@ -171,28 +172,34 @@ function loadJSON(project) {
 //sauver le json
 function saveJSON(project) {
 	//project
+	let numOfReq = 1
+	FetchAPI.$loader.hidden = false
 	let url = FetchAPI.apiURL + 'project/' + project
 	let datas = levelDesign.world.toJSON()
 	FetchAPI.fetch(url, 'POST', {world : datas}, (output) => {
 		console.log(output)
+		numOfReq--
+		if(numOfReq <= 0) FetchAPI.$loader.hidden = true
 	})
 
 	//levels
 	levelDesign.world.levels.forEach(level => {
 		if(!level.edited) return
 
+		numOfReq++
 		url = FetchAPI.apiURL + 'project/' + project + '/level/' + level.slug
 		datas = level.toJSON()
 		FetchAPI.fetch(url, 'POST', datas, (output) => {
+			numOfReq--
+			if(numOfReq <= 0) FetchAPI.$loader.hidden = true
 			console.log(output)
 			if(output.success) level.edited = false
 		})
-	})	
+	})
 }
 
 //charger un level
 function initMap(json) {
-	console.log('load level')
 	console.log(json)
 
 	//charger dans le window
@@ -215,7 +222,6 @@ function manageTabs() {
 			const url = new URL($btn.href)
 			const id = url.hash.replace('#', '')
 
-			console.log('open tab ' + id)
 			$btns.forEach($b => {
 				if($b == $btn)
 					$b.classList.add('on')
@@ -231,6 +237,7 @@ function manageTabs() {
 			})
 
 			document.querySelectorAll('#main-content canvas').forEach($canvas => {
+				if(!document.querySelector('#main-content canvas#' + id + '-map')) return
 				if($canvas.id == id + '-map')
 					$canvas.classList.add('on')
 				else

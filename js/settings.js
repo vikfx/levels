@@ -1,5 +1,6 @@
 import { FetchAPI } from './fetchAPI.js'
 import { Palette } from './palette.js'
+import { Datas } from './datas.js'
 import { World } from './world.js'
 
 export class Settings {
@@ -14,6 +15,7 @@ export class Settings {
 		
 		this.addListeners()
 		this.palettes = []
+		Datas.clearHTML()
 		this.load(settings)
 		
 		Settings.instance = this
@@ -25,7 +27,7 @@ export class Settings {
 		World.cloneEl([Settings.$containers.forms.model, Settings.$containers.forms.palette])
 
 		//tools
-		Settings.$containers.tools.forEach($tool => {
+		Settings.$containers.tools.forEach(($tool, i) => {
 			$tool.addEventListener('click', evt => {
 				Settings.$containers.tools.forEach($t => {
 					if($t == $tool)
@@ -34,9 +36,10 @@ export class Settings {
 						$t.classList.remove('on')
 				})
 			})
-		})
 
-		Settings.$containers.tools[0].classList.add('on')
+			if(i == 0) $tool.classList.add('on')
+			else $tool.classList.remove('on')
+		})
 
 		//form model
 		const $mForm = Settings.$containers.forms.model
@@ -96,9 +99,7 @@ export class Settings {
 
 	//charger les settings
 	load(settings) {
-		settings.palettes.forEach(p => {
-			this.addPalette(p)
-		})
+		settings.palettes.forEach(p => this.addPalette(p) )
 		if(this.palettes.length > 0) this.palettes[0].setActive()
 	}
 
@@ -131,9 +132,7 @@ export class Settings {
 
 	//renvoyer le modele courant
 	get currentModel() {
-		return this.currentPalette.models.find(m => {
-			return m.$el.classList.contains('on')
-		})
+		return this.currentPalette.models.find(m => m.$el.classList.contains('on'))
 	}
 
 	//renvoyer l'outil courant
@@ -180,17 +179,17 @@ export class Settings {
 		if(!$paletteForm) throw new Error('la palette doit contenir un formulaire #add-palette')
 		
 		return {
-			palette : {
-				parent : $palettesContainer,
-				nav : $nav,
-				ul : $ul
+			palette 	: {
+				parent 		: $palettesContainer,
+				nav 		: $nav,
+				ul 			: $ul
 			},
-			forms : {
-				model : $modelForm,
-				palette : $paletteForm
+			forms 		: {
+				model 		: $modelForm,
+				palette 	: $paletteForm
 			},
-			tools : $tools,
-			history : $historyTools
+			tools 		: $tools,
+			history 	: $historyTools
 		}
 	}
 }

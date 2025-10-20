@@ -25,14 +25,14 @@ export class FetchAPI {
 		.then(res => res.json())
 		.then((output) => {
 			if(output.error) {
+				FetchAPI.$loader.hidden = true
 				if(output.error == 'Unauthorized') {
-					//location.href = './index.html'
 					alert('erreur de connexion, reconnectez-vous')
-					//hideWelcome()
 				} else {
 					alert(output.error)
 					throw new Error(output.error)
 				}
+
 
 				if (typeof error === 'function') {
 					error(output)
@@ -41,10 +41,10 @@ export class FetchAPI {
 
 			if(!output.action) {
 				console.log('aucune action dans la reponse')
+				FetchAPI.$loader.hidden = true
 				return
 			} else {
 				//masquer la popup d'entrée
-				//hideWelcome()
 				if (typeof callback === 'function') {
 					callback(output)
 				}
@@ -78,5 +78,12 @@ export class FetchAPI {
 		const path = new URL(url, 'http://dummy').pathname
 		const regex = /^[a-zA-Z0-9_:/?&=]+$/;
 		return regex.test(path);
+	}
+
+	//le container du loader
+	static get $loader() {
+		const $loader = document.querySelector('#loader')
+		if(!$loader) throw new Error('impossible de trouver le #loader')
+		return $loader
 	}
 }

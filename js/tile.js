@@ -1,4 +1,7 @@
+import { Datas } from './datas.js'
+import { Grid } from './grid.js'
 import { Model } from './model.js'
+import { World } from './world.js'
 
 export class Tile {
 	x				//coordonnee x de la tile
@@ -7,35 +10,41 @@ export class Tile {
 	datas			//les datas supplémentaires
 	$el				//l'element html
 	layer			//le layer parent de la tile
-	_name			//nom de la tile
+	//_name			//nom de la tile
 
-	constructor(x, y, model, layer) {
+	constructor(x, y, model, layer, datas = {}) {
 		this.x = x
 		this.y = y
 		this.ref = model
 		this.layer = layer
-		this.datas = {}
-		this.name = ''
+
+		this.datas = new Datas(datas, this)
 	}
 
+	//renvoyer le nom de la tile
 	get name() {
-		return (this._name != '') ? this._name : 'tile (' + this.x + ', ' + this.y + ')'
+		return this.datas.name
 	}
 
+	//attribuer un nom à la tile
 	set name(value) {
-		this._name = value
+		this.datas.name = value
+	}
+
+	get position() {
+		return {x : this.x, y : this.y}
 	}
 
 	//supprimer le html
 	clear() {
-		const $parent = this.layer.$tileContainer
-		if(this.$el && $parent.contains(this.$el)) $parent.removeChild(this.$el)
+		if(!this.$el) return
+		this.$el.parentNode.removeChild(this.$el)
 		this.$el = null
 	}
 
 	//creer le html dans le parent
-	createHTML() {
-		const $parent = this.layer.$tileContainer
+	createHTML($parent) {
+		//const $parent = this.layer.$tileContainer
 
 		const $li = document.createElement('li')
 		$li.classList.add('tile')
@@ -75,13 +84,17 @@ export class Tile {
 		this.$el = $li
 	}
 
+	setDatasHTML() {
+		this.datas.createHTML()
+	}
+
 	//convertir en tableau json
 	toJSON() {
 		return {
 			x 		: this.x,
 			y 		: this.y,
 			model 	: this.ref,
-			datas 	: this.datas
+			datas 	: this.datas.toJSON()
 		}
 	}
 

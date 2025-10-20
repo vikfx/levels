@@ -9,24 +9,13 @@
 </head>
 <body>
 	<header id="main-header">
-		<!-- <form class="project">
-			<input type="submit" formaction="/api/project/" formmethod="GET" value="Open" class="button"></button>
-			<input type="submit" formaction="/api/project/" formmethod="POST" value="Save" class="button"></button>
-			<input type="submit" formaction="/api/export/" formmethod="GET" value="Export" class="button"></button>
-			<input type="submit" formaction="/api/import/" formmethod="POST" value="Import" class="button"></button>
-			<input type="text" name="project-name" value="" placeholder="nom du projet">
-			<div class="modal">
-				<div class="modal-content">
-					<input type="file" name="project-json">
-				</div>
-			</div>
-		</form> -->
 		<form class="project">
 			<button type="submit" class="button" data-action="projectGET">Open</button>
 			<button type="submit" class="button" data-action="projectSAVE">Save</button>
 			<button type="submit" class="button" data-action="export">Export</button>
 			<button type="submit" class="button" data-action="import">Import</button>
 			<input type="text" name="project-name" value="" placeholder="nom du projet">
+			<span id="loader">loading</span>
 			<div class="modal">
 				<div class="modal-content">
 					<input type="file" name="project-json">
@@ -38,12 +27,12 @@
 		
 		<form id="login" class="right-col">
 			<input type="password" name="api-key" value="" placeholder="api key">
-			<!-- <input type="submit" class="button" value="connexion"> -->
 			<button type="submit" class="button">connexion</button>
 		</form>
 	</header>
 
 	<div id="page">
+		<!-- #sidebar -->
 		<aside id="sidebar">
 			<header>
 				<h2 id="current-level"></h2>
@@ -57,7 +46,9 @@
 					<a href="#tile">Tile</a>
 				</nav>
 			</header>
+
 			<section id="tabs">
+				<!-- #level-mode -->
 				<div id="level-mode" class="tab">
 					<h3>Tools</h3>
 					<ul id="history-tools" class="tools">
@@ -86,7 +77,7 @@
 							</li> -->
 						</ul>
 						
-						<form id="add-model">
+						<form id="add-model" class="box">
 							<h4>Ajouter un modèle</h4>
 							<input type="text" name="model-name" value="" placeholder="nom du model">
 							<input type="text" name="model-slug" value="" placeholder="slug du model">
@@ -94,7 +85,7 @@
 							<input type="submit" value="ajouter">
 						</form>
 						
-						<form id="add-palette">
+						<form id="add-palette" class="box">
 							<h4>Ajouter une palette</h4>
 							<input type="text" name="palette-name" value="" placeholder="nom de la palette">
 							<input type="text" name="palette-slug" value="" placeholder="slug de la palette">
@@ -106,7 +97,7 @@
 						<h3>Layers</h3>
 						<ul>
 							<!-- <li class="layer" data-layer-id="XXX">
-								<h4>
+								<h4 class="line">
 									<button data-action="visible">afficher</button>
 									<button data-action="locked">verrouiller</button>
 									<input type="text" value="XXX">
@@ -123,18 +114,19 @@
 								</ul>
 							</li> -->
 						</ul>
-						<form id="add-layer">
+						<form id="add-layer" class="box">
 							<h4>Ajouter un layer</h4>
 							<input type="text" name="layer-name" value="" placeholder="nom du layer">
 							<input type="text" name="layer-slug" value="" placeholder="slug du layer">
 							<input type="submit" value="ajouter">
 						</form>
 					</div>
-				</div>
+				</div> <!-- /#level-mode -->
 
+				<!-- #world-mode -->
 				<div id="world-mode" class="tab on">
 					<div id="world">
-						<form id="world-size">
+						<form id="world-size" class="box">
 							<h4>Taille de la map</h4>
 							<input type="number" name="grid-width" value="0">
 							<input type="number" name="grid-height" value="0">
@@ -161,7 +153,7 @@
 							</li> -->
 						</ul>
 						
-						<form id="add-level">
+						<form id="add-level" class="box">
 							<h4>Ajouter un level</h4>
 							<input type="text" name="lvl-name" value="" placeholder="nom du level">
 							<input type="text" name="lvl-slug" value="" placeholder="slug du level">
@@ -173,52 +165,71 @@
 							<input type="submit" value="ajouter">
 						</form>
 					</div>
-				</div>
+				</div> <!-- /#world-mode -->
 
+				<!-- #tile-mode -->
 				<div id="tile-mode" class="tab">
-					<form id="tile-info">
-						<h4>tile infos</h4>
+					<div id="tile-infos">
+						<h3>infos tile</h3>
 						<input type="text" name="tile-name" value="" placeholder="nom de la tile">
-						<ul id="tile-pos">
-							<li>x 0000</li>
-							<li>y 0000</li>
+						<div class="line">
+							<div class="pos-x">x <span>0000</span></div>
+							<div class="pos-y">y <span>0000</span></div>
+						</div>
+						<select name="reference"></select>
+						<button data-action="delete">delete</button>
+					</div>
+					
+					<div id="tile-relation">
+						<h3>tile relation</h3>
+						<p class="relation-name">linked to : <span></span></p>
+						<button data-action="select">select</button>
+						<button data-action="goto">go to</button>
+						<button data-action="delete">remove</button>
+					</div>
+					
+					<div id="tile-path">
+						<h3>path</h3>
+						<ul>
+							<!-- <li class="line">
+								<input type="number" name="x" value="0000" placeholder="x">
+								<input type="number" name="y" value="0000" placeholder="y">
+								<button data-action="delete">suppr</button>
+							</li> -->
 						</ul>
-						<li><label>ref</label><select name="reference"></select></li>
-						<button>delete</button>
+						<button data-action="delete">delete path</button>
+						<!-- <button data-action="make">make path</button> -->
+						<form id="new-point" class="box">
+							<h4>Ajouter un point</h4>
+							<div class="line">
+								<input type="number" name="x" value="0000" placeholder="x">
+								<input type="number" name="y" value="0000" placeholder="y">
+							</div>
+							<!-- <button data-action="add">ajouter</button> -->
+							<input type="submit" value="ajouter">
+						</form>
+					</div>
 						
-						<div id="tile-relation">
-							<h5>linked to <span>tile-name</span></h5>
-							<button data-action="select">select</button>
-							<button data-action="select">delete</button>
-							<button data-action="select">change</button>
-						</div>
-
-						<div id="path">
-							<ul>
-								<li>
-									<ul>
-										<li><label>x</label><input type="number" value="0000"></li>
-										<li><label>y</label><input type="number" value="0000"></li>
-										<button data-action="delete">delete</button>
-									</ul>
-								</li>
-							</ul>
-						</div>
-						
-						<div id="datas">
-							<ul>
-								<li>
-									<ul>
-										<li><label>key</label><input type="text"></li>
-										<li><label>value</label><input type="text"></li>
-									</ul>
-								</li>
-							</ul>
-						</div>
-
-						<!-- <input type="submit" value="ajouter"> -->
-					</form>
-				</div>
+					<div id="tile-datas">
+						<h3>datas</h3>
+						<ul>
+							<!-- <li class="line">
+								<input type="text" name="key" placeholder="key">
+								<input type="text" name="val" placeholder="value">
+								<button data-action="delete">suppr</button>
+							</li> -->
+						</ul>
+						<form id="new-data" class="box">
+							<h4>Ajouter une data</h4>
+							<div class="line">
+								<input type="text" name="key" placeholder="key">
+								<input type="text" name="val" placeholder="value">
+							</div>
+							<!-- <button data-action="add">ajouter</button> -->
+							<input type="submit" value="ajouter">
+						</form>
+					</div>
+				</div> <!-- /#tile-mode -->
 				
 				<!-- <div id="minimap">
 					<h3>Mini map</h3>
@@ -229,6 +240,7 @@
 
 		</aside>
 		
+		<!-- #main-content -->
 		<main id="main-content">
 			<canvas id="level-map"></canvas>
 			<canvas id="world-map" class="on"></canvas>
@@ -247,8 +259,9 @@
 				</form>
 			</div>
 		</div>
-	</div>
+	</div> <!-- /#page -->
 
+	<!-- scripts -->
 	<script type="module" src="./js/main.js"></script>
 </body>
 </html>

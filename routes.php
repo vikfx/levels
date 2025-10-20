@@ -139,6 +139,7 @@ function save_level_request($params, $body) {
 	rest_response([
 		'action'  	=> 'save_level',
 		'project' 	=> $project,
+		'level' 	=> $level,
 		'success'	=> $success
 	]);
 }
@@ -323,7 +324,7 @@ function merge_project_datas($old, $new = []) {
 
 	//ajouter les settings si besoin
 	if(!isset($old['settings'])) $old['settings'] = [];
-	if(!isset($old['settings']['palette'])) $old['settings']['palette'] = [];
+	if(!isset($old['settings']['palettes'])) $old['settings']['palettes'] = [];
 
 	//ajouter la map si besoin
 	if(!isset($old['world'])) $old['world'] = [];
@@ -365,7 +366,7 @@ function merge_project_datas($old, $new = []) {
 function get_level($project, $level, $decode = true) {
 	//ouvrir le dossier
 	$project_dir =  UPLOAD_FOLDER . $project;
-	$json_file = $project_dir . '/' . $level . '.json';
+	$json_file = $project_dir . '/' . LEVEL_PREFIX . $level . '.json';
 
 	if (!is_dir($project_dir) || !file_exists($json_file)) return;
 
@@ -378,7 +379,7 @@ function get_level($project, $level, $decode = true) {
 function save_level($project, $level, $datas, $save_project = true) {
 	//recuperer les chemins
 	$project_dir =  UPLOAD_FOLDER . $project;
-	$json_file = $project_dir . '/' . $level . '.json';
+	$json_file = $project_dir . '/' . LEVEL_PREFIX . $level . '.json';
 
 	//le dossier n'existe pas
 	if (!is_dir($project_dir)) return false;
@@ -475,7 +476,7 @@ function parse_level($datas) {
 function delete_level($project, $level, $levels) {
 	//supprimer l'image
 	$project_dir =  UPLOAD_FOLDER . $project;
-	$json_file = $project_dir . '/' . $level . '.json';
+	$json_file = $project_dir . '/' . LEVEL_PREFIX . $level . '.json';
 
 	$deleted = false;
 	if(file_exists($json_file)) $deleted = unlink($json_file);

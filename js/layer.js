@@ -12,6 +12,8 @@ export class Layer {
 	visible				//le calque est visible ou non
 	locked				//le calque est verrouillé ou non
 	level				//le level parent
+	relations
+	pathes
 	
 	constructor(slug, name, tiles = [], level) {
 		if(!slug) throw new Error('slug invalide')
@@ -21,8 +23,11 @@ export class Layer {
 		this.locked = false
 		this.chunks = new Chunks()
 		this.level = level
+
+		this.relations = []
+		this.pathes = []
 		tiles.forEach(t => {
-			return this.addTile(t.x, t.y, t.model)
+			return this.addTile(t.x, t.y, t.model, t.datas)
 		})
 	}
 
@@ -47,6 +52,7 @@ export class Layer {
 		$li.dataset.layerId = this.slug
 
 		const $h = document.createElement('h4')
+		$h.classList.add('line')
 
 		//nom
 		const $input = document.createElement('input')
@@ -149,7 +155,7 @@ export class Layer {
 	}
 
 	//ajouter une tile
-	addTile(x, y, model = false) {
+	addTile(x, y, model = false, datas = {}) {
 		let tile
 		if (x instanceof Tile) {
 			tile = x
@@ -158,7 +164,7 @@ export class Layer {
 			tile.layer = this
 		} else {
 			if(isNaN(x) || isNaN(y) || !model) return false
-			tile = new Tile(x, y, model, this)
+			tile = new Tile(x, y, model, this, datas)
 		}
 
 		if(this.findTileAt(x, y))
@@ -168,6 +174,10 @@ export class Layer {
 			throw new Error('coordonnées en dehors des limites')
 
 		this.chunks.push(tile)
+
+		//path et relation
+		if(tile.datas.path) this.addPath(tile, tile.datas.path)
+		if(tile.datas.relation) this.addRelation(tile, tile.datas.relation)
 		
 		return tile
 	}
@@ -175,9 +185,15 @@ export class Layer {
 	//supprimer une tile
 	removeTile(tile) {
 		const i = this.chunks.pop(tile)
-		if(i >= 0) {
-			tile.clear()
-		}
+		if(i >= 0) tile.clear()
+		this.removePath(tile)
+		this.removeRelation(tile)
+	}
+
+	//rafraichir le visuel de la tile
+	refreshTile(tile) {
+		this.chunks.pop(tile)
+		this.chunks.push(tile)
 	}
 
 	//retrouver une tile aux coordonnées
@@ -186,8 +202,50 @@ export class Layer {
 		return this.chunks.findTileAt(x, y)
 	}
 
+	//ajouter une relation dans le tableau
+	addRelation(tileA, tileB) {
+		if(!this.relations) this.relations = []
+		if(!tileA || !tileB) return
+		if(this.getRelation(tileA) || this.getRelation(tileB)) {
+			this.removeRelation(tileA)
+			this.removeRelation(tileB)
+		}
+		this.relations.push([tileA, tileB])
+	}
+
+	//supprimer une relation dans le tableau
+	removeRelation(tile) {
+		if(!tile) return
+		const relation = this.getRelation(tile)
+		if(!relation) return
+		const i = this.relations.indexOf(relation)
+		if(i < 0) return
+		this.relations.splice(i, 1)
+	}
+	
+	//trouver une relation
+	getRelation(tile) {
+		return this.relations.find(r => r.includes(tile))
+	}
+
+	//ajouter un path
+	addPath(tile, path) {
+		if(!this.pathes) this.pathes = []
+
+		//supprimer l'ancien
+		this.removePath(tile)
+
+		this.pathes.push({tile, path})
+	}
+	
+	//supprimer un path
+	removePath(tile) {
+		const i = this.pathes.findIndex(p => p.tile == tile)
+		if(i >= 0) this.pathes.splice(i, 1)
+	}
+
 	//dessiner le canvas
 	draw(bounds, dz, ctx) {
 		this.chunks.draw(bounds, dz, ctx)
-	}	
+	}
 }

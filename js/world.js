@@ -17,8 +17,8 @@ export class World {
 		this.levels = []
 		this.currentLevel = null
 		this.load(mapJson)
-		this.draw()
 		this.addListeners()
+		this.draw()
 		
 		World.instance = this
 	}
@@ -56,8 +56,13 @@ export class World {
 	//init le html du monde
 	addListeners() {
 		let $c = World.$containers
-		World.cloneEl([$c.size.w, $c.size.h, $c.forms.level, $c.forms.layer, $c.drawBtn])		//cloner pour eviter les doubles listeners
+		World.cloneEl([$c.size.w, $c.size.h, $c.forms.level, $c.forms.layer, $c.drawBtn, $c.canvas])		//cloner pour eviter les doubles listeners
 		$c = World.$containers
+
+		//resize du canvas
+		$c.canvas.addEventListener('canvasResized', evt => {
+			this.draw()
+		})
 
 		//taille du monde
 		const $w = $c.size.w
@@ -189,16 +194,16 @@ export class World {
 		ctx.clearRect(0, 0, $canvas.width, $canvas.height)
 
 		//dessiner le contour du monde
-		ctx.strokeStyle = '#CC00CC'
-		ctx.lineWidth = 3
+		ctx.strokeStyle = World.styles.border.color
+		ctx.lineWidth = World.styles.border.width
 		ctx.strokeRect(0, 0, this.width * size, this.height * size)
 
 
 		//dessiner les levels
-		ctx.strokeStyle = '#CCCC00'
-		ctx.fillStyle = '#CCCC00'
-		ctx.lineWidth = 3
-		ctx.font = '16px content';
+		ctx.strokeStyle = World.styles.level.color
+		ctx.fillStyle = World.styles.level.color
+		ctx.lineWidth = World.styles.level.width
+		ctx.font = World.styles.level.text
 		this.levels.forEach(level => {
 			const x = level.startX * size
 			const y = level.startY * size
@@ -258,6 +263,21 @@ export class World {
 		})
 	}
 
+	//styles deselements dans le canvas
+	static get styles() {
+		return {
+			border 		: {
+				color 		: '#CC00CC',
+				width 		: 5
+			},
+			level 		: {
+				color 		: '#CCCC00',
+				width 		: 1,
+				text 		: '16px content'
+			}
+		}
+	}
+
 	//recuperer l'instance du singleton
 	static getInstance() {
 		if (!World.instance) throw new Error('la classe map doit être initialisée')
@@ -305,23 +325,23 @@ export class World {
 		if(!$canvas) throw new Error('canvas monde manquant')
 	
 		return {
-			size : {
-				w : $w,
-				h : $h,
+			size 		: {
+				w 			: $w,
+				h 			: $h,
 			},
-			coords : {
-				x : $tx,
-				y : $ty
+			coords 		: {
+				x 			: $tx,
+				y 			: $ty
 			},
-			forms : {
-				level : $flevel,
-				layer : $fLayer
+			forms 		: {
+				level 		: $flevel,
+				layer 		: $fLayer
 			},
-			levels : $levels,
-			title : $title,
-			layers : $layers,
-			canvas : $canvas,
-			drawBtn : $draw
+			levels 		: $levels,
+			title 		: $title,
+			layers 		: $layers,
+			canvas 		: $canvas,
+			drawBtn 	: $draw
 		}
 	}
 

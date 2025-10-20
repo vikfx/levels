@@ -1,6 +1,7 @@
 import { Settings } from './settings.js'
 import { Model } from './model.js'
 import { FetchAPI } from './fetchAPI.js'
+import { Datas } from './datas.js'
 
 export class Palette {
 	name								//nicename de la palette
@@ -16,9 +17,7 @@ export class Palette {
 		
 		this.createHTML()
 		
-		models.forEach(model => {
-			this.addModel(model)
-		})
+		models.forEach(model => this.addModel(model))
 		if(this.models.length > 0) this.models[0].setActive()
 	}
 
@@ -46,16 +45,6 @@ export class Palette {
 		const $nav = $containers.nav
 		const $ul = $containers.ul
 		if(!$nav || !$ul) return
-
-		// //palette déjà existante
-		// if(
-		// 	$nav.querySelector('a[href="#palette-' + this.slug + '"]')
-		// 	|| $ul.querySelector('#palette-' + this.slug)
-		// ) {
-		// 	this.$el = $ul.querySelector('#palette-' + this.slug)
-		// 	console.log('la palette ' + this.slug + ' existe déjà')
-		// 	return
-		// }
 
 		//creer le html du bouton
 		const $a = document.createElement('a')
@@ -137,8 +126,6 @@ export class Palette {
 			if($oli == $li) $oli.classList.add('on')
 			else $oli.classList.remove('on')
 		})
-
-		//$li.dispatchEvent( new Event())
 	}
 
 	//ajouter un model
@@ -147,7 +134,9 @@ export class Palette {
 			throw new Error('un model avec le slug ' + model.slug + ' existe déjà')
 		}
 
-		this.models.push(new Model(model.name, model.slug, model.img, this))
+		const m = new Model(model.name, model.slug, model.img, this)
+		Datas.appendModel(m)
+		this.models.push(m)
 	}
 
 	//supprimer un model
@@ -157,6 +146,7 @@ export class Palette {
 		const i = this.models.indexOf(model)
 		
 		if(i >= 0) {
+			Datas.removeModel(model)
 			model.clear()
 			this.models.splice(i, 1)
 		}

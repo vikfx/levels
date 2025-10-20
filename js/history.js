@@ -1,4 +1,4 @@
-export class TileHistory {
+export class History {
 	actions
 	current
 	maxHistory = 20
@@ -24,9 +24,9 @@ export class TileHistory {
 
 	//revenir en arrière
 	prev() {
-		if(this.actions.length < 1 || this.current <= 0) return
+		if(this.actions.length < 1 || this.current < 0) return
 		const action = this.actions[this.current]
-		this.current = Math.max(this.current - 1, 0)
+		this.current = Math.max(this.current - 1, -1)
 		return action
 	}
 	

@@ -16,6 +16,7 @@ define('FILE_PERMISSIONS' , (isset($dotenv['FILE_PERMISSIONS'])) ? octdec($doten
 
 //definir les chemins pour le json
 define('FILE_JSON' , 'levels.json');
+define('LEVEL_PREFIX' , 'level-');
 define('UPLOAD_FOLDER' , __DIR__ . "/uploads/");
 
 //init les routes
