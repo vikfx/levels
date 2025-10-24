@@ -23,13 +23,13 @@ export class Settings {
 
 	//ajouter les listeners sur les tools
 	addListeners() {
-		World.cloneEl([...Settings.$containers.tools])
+		World.cloneEl([...Settings.$containers.tools.btns])
 		World.cloneEl([Settings.$containers.forms.model, Settings.$containers.forms.palette])
 
 		//tools
-		Settings.$containers.tools.forEach(($tool, i) => {
+		Settings.$containers.tools.btns.forEach(($tool, i) => {
 			$tool.addEventListener('click', evt => {
-				Settings.$containers.tools.forEach($t => {
+				Settings.$containers.tools.btns.forEach($t => {
 					if($t == $tool)
 						$t.classList.add('on')
 					else
@@ -137,7 +137,7 @@ export class Settings {
 
 	//renvoyer l'outil courant
 	get currentTool() {
-		const $tool = [...Settings.$containers.tools].find($t => {
+		const $tool = [...Settings.$containers.tools.btns].find($t => {
 			return $t.classList.contains('on')
 		})
 
@@ -156,18 +156,19 @@ export class Settings {
 		//tools
 		const $toolsContainer = document.querySelector('#palette-tools')
 		if(!$toolsContainer) throw new Error('impossible de trouver #palette-tools')
-		const $tools = $toolsContainer.querySelectorAll(':scope > li')
-
+		const $tools = $toolsContainer.querySelectorAll(':scope > .button')
 	
 		//history
 		const $historyContainer = document.querySelector('#history-tools')
 		if(!$historyContainer) throw new Error('impossible de trouver #history-tools')
-		const $historyTools = $historyContainer.querySelectorAll(':scope > li')
+		const $historyTools = $historyContainer.querySelectorAll(':scope > .button')
 
-		//history
+		//copy
 		const $copyContainer = document.querySelector('#copy-tools')
 		if(!$copyContainer) throw new Error('impossible de trouver #copy-tools')
-		const $copyTools = $copyContainer.querySelectorAll(':scope > li')
+		const $copyTools = $copyContainer.querySelectorAll(':scope > .button')
+		const $copyReturn = $copyContainer.querySelector(':scope > .return')
+		if(!$copyReturn) throw new Error('le #copy-tools ne contient pas de .return')
 	
 		//palette
 		const $palettesContainer = document.querySelector('#palettes')
@@ -193,9 +194,16 @@ export class Settings {
 				model 		: $modelForm,
 				palette 	: $paletteForm
 			},
-			tools 		: $tools,
-			history 	: $historyTools,
-			copy 		: $copyTools
+			tools 		: {
+				btns 		:$tools
+			},
+			history 	: {
+				btns		:$historyTools
+			},
+			copy 		: {
+				btns		: $copyTools,
+				return		:$copyReturn
+			}
 		}
 	}
 }

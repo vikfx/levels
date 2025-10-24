@@ -252,7 +252,7 @@ export class Layer {
 		if(i >= 0) this.pathes.splice(i, 1)
 	}
 
-	//dessiner le canvas
+	//dessiner les chunks
 	draw(bounds, dz, ctx) {
 		this.chunks.draw(bounds, dz, ctx)
 	}

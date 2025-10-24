@@ -186,6 +186,10 @@ export class Datas {
 			const k = Datas.$containers.datas.new.key.value
 			const v = Datas.$containers.datas.new.val.value
 			if(k === '' || v === '') return
+			if(k == 'path' || k == 'relation') {
+				alert('la clé ' + k + ' est reservée')
+				return
+			}
 			this.datas[k] = v
 			this.addData(k, v)
 		})
@@ -251,7 +255,6 @@ export class Datas {
 		const $li = document.createElement('li')
 		$li.classList.add('line')
 
-
 		const $ik = document.createElement('input')
 		const $iv = document.createElement('input')	//creation anticipée pour recuperer dans le listener
 
@@ -260,12 +263,9 @@ export class Datas {
 		$ik.placeholder = 'key'
 		$ik.value = k
 		$ik.addEventListener('change', evt => {
-			const data = this.datas[k]
-			if(data)  {
-				delete this.datas[k]
-				k = $ik.value
-			}
-			this.datas[k] == $iv.value
+			if(this.datas[k]) delete this.datas[k]
+			k = $ik.value
+			this.datas[k] = $iv.value
 		})
 		
 		$iv.type ='text'
@@ -273,7 +273,8 @@ export class Datas {
 		$iv.placeholder = 'value'
 		$iv.value = v
 		$iv.addEventListener('change', evt => {
-			this.datas[k] == $iv.value
+			v = $iv.value
+			this.datas[k] = $iv.value
 		})
 		
 		const $del = document.createElement('button')

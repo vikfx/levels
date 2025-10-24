@@ -1,7 +1,6 @@
 import { Level } from './level.js'
 import { Grid } from './grid.js'
 
-
 export class World {
 	static instance			//instance du singleton
 	levels					//liste des levels
@@ -25,6 +24,7 @@ export class World {
 
 	//vider le monde
 	clear() {
+		this.currentLevel = null
 		if(this.levels)
 			[...this.levels].forEach(level => {this.removeLevel(level)})	//[...] force à reevaluer apres le splice
 	}
@@ -198,7 +198,6 @@ export class World {
 		ctx.lineWidth = World.styles.border.width
 		ctx.strokeRect(0, 0, this.width * size, this.height * size)
 
-
 		//dessiner les levels
 		ctx.strokeStyle = World.styles.level.color
 		ctx.fillStyle = World.styles.level.color
@@ -239,7 +238,9 @@ export class World {
 			layer.draw(level.bounds, size, ctx)
 		})
 		
+		console.log('create image')
 		createImageBitmap($canvas).then(bitmap => {
+			console.log('image created')
 			level.minimap = bitmap
 			this.draw()
 		})

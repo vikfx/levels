@@ -251,6 +251,7 @@ SIDEBAR
 .tools {
     display: flex;
     gap: var(--space-xs);
+	align-items: center;
 }
 
 

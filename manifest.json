@@ -1,7 +1,7 @@
 {
   "name": "Level Design",
   "short_name": "LD",
-  "start_url": "./level.html",
+  "start_url": "./index.html",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#203343",

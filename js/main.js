@@ -10,11 +10,8 @@ let levelDesign
 document.addEventListener('DOMContentLoaded', (evt) => {
 	console.log('hello main')
 
-	//loadEruda()
 	initFullScreen()
-	
 	initCanvas()
-
 
 	authenticate()
 	projectRequest()
@@ -181,9 +178,7 @@ function loadJSON(project) {
 				initMap(output.datas)
 			})
 		}
-
 	})
-
 }
 
 //sauver le json

@@ -27,6 +27,7 @@ export class Grid {
 
 	//reinitialiser les variables
 	reset() {
+		console.log('reset')
 		this.offset = (this.level) ? this.level.clampPos(0, 0) : {x: 0, y: 0}
 		this.cursor = {start : false, end : false, select : false}
 		this.selection = {current: false, tiles: [], positions : false}
@@ -40,8 +41,8 @@ export class Grid {
 	addListeners() {
 		//clonage pour eviter le double listener
 		World.cloneEl([Grid.$containers.canvas])
-		World.cloneEl([...Settings.$containers.history])
-		World.cloneEl([...Settings.$containers.copy])
+		World.cloneEl([...Settings.$containers.history.btns])
+		World.cloneEl([...Settings.$containers.copy.btns])
 
 		let $canvas = Grid.$containers.canvas
 		$canvas.getContext('2d').imageSmoothingEnabled = false
@@ -61,8 +62,8 @@ export class Grid {
 		//ajouter les listener
 		this.addSelectionListeners($canvas)
 		this.addPanZoomListeners($canvas)
-		this.addHistoryListeners(Settings.$containers.history)
-		this.addCopyListeners(Settings.$containers.copy)
+		this.addHistoryListeners(Settings.$containers.history.btns)
+		this.addCopyListeners(Settings.$containers.copy.btns)
 	}
 
 	//gestion des events de navigation dans l'historique
@@ -114,8 +115,12 @@ export class Grid {
 
 	//gestion des events de copier coller
 	addCopyListeners($btns) {
+		const $output = Settings.$containers.copy.return
+		$output.hidden = true
 		$btns.forEach($btn => {
 			$btn.addEventListener('click', evt => {
+				if(!this.level) return
+
 				const actionBtn = $btn.dataset.action
 				console.log('action : ' + actionBtn)
 				if(!actionBtn) return
@@ -123,10 +128,14 @@ export class Grid {
 				let tiles
 				let action
 				const sel = this.selection.selection
+				if(!sel) return
+
 				switch(actionBtn) {
 					//copier
 					case 'copy' : 
 						this.clipboard = this.getTilesInSelection(sel, this.level.currentLayer)
+						$output.hidden = false
+						setTimeout(() => {$output.hidden = true}, 1200)
 						break
 
 					//couper
@@ -217,7 +226,9 @@ export class Grid {
 				this.cursor.select = false
 				this.draw()
 				
-				if(tiles.removed.length > 0 || tiles.added.length > 0) this.history.push(tiles)
+				if(tiles.removed.length > 0 || tiles.added.length > 0) {
+					this.history.push(tiles)
+				}
 
 				//dispatch event paint
 				const detail = { tiles, action, selection }
@@ -245,7 +256,7 @@ export class Grid {
 		$canvas.addEventListener('paint', evt => {
 			const tiles = evt.detail.tiles.selected
 			const current = (tiles.length > 0) ? tiles[0] : false
-			const selection = ((tiles.length > 0)) ? evt.detail.selection : false
+			const selection = (Settings.getInstance().currentTool == 'select') ? evt.detail.selection : false
 			this.selection = {current, tiles, selection}
 			console.log(this.selection)
 			if(current) current.setDatasHTML()
@@ -459,14 +470,15 @@ export class Grid {
 			}
 		}
 
-		this.level.edited = true
-
+		if(removed.length > 0 || added.length > 0 || selected.length > 0)
+			this.level.edited = true
+		
 		const tiles = {
 			removed,
 			added,
 			selected
 		}
-
+		
 		return tiles
 	}
 
@@ -502,14 +514,9 @@ export class Grid {
 
 	//tableau des tiles depuis une selection
 	getTilesInSelection(sel, layer) {
-		if(!layer) {
-			alert('aucun calque selectionné')
-			return
-		}
-		if(layer.locked || !layer.visible) {
-			alert('le calque est verrouillé ou masqué')
-			return
-		}
+		if(!layer) return
+		if(layer.locked || !layer.visible) return
+		if(!sel) return
 
 		const tiles = []
 		for(let l = sel.y; l < sel.y + sel.h; l++) {
@@ -660,7 +667,6 @@ export class Grid {
 		const sel = this.selection
 
 		const tiles = (sel.selection) ? this.getTilesInSelection(sel.selection, this.level.currentLayer) : []
-		//const tiles = this.selection.tiles
 
 		tiles.forEach(t => {
 			ctx.strokeStyle = Grid.styles.selected.current.color
