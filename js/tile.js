@@ -1,7 +1,6 @@
 import { Datas } from './datas.js'
-import { Grid } from './grid.js'
 import { Model } from './model.js'
-import { World } from './world.js'
+
 
 export class Tile {
 	x				//coordonnee x de la tile
@@ -31,6 +30,7 @@ export class Tile {
 		this.datas.name = value
 	}
 
+	//renvoyer la position de la tile en {x, y}
 	get position() {
 		return {x : this.x, y : this.y}
 	}
@@ -44,8 +44,6 @@ export class Tile {
 
 	//creer le html dans le parent
 	createHTML($parent) {
-		//const $parent = this.layer.$tileContainer
-
 		const $li = document.createElement('li')
 		$li.classList.add('tile')
 		$li.dataset.x = this.x
@@ -84,6 +82,7 @@ export class Tile {
 		this.$el = $li
 	}
 
+	//rentrer les données de la tile dans l'onglet des datas
 	setDatasHTML() {
 		this.datas.createHTML()
 	}

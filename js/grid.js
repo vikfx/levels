@@ -2,6 +2,7 @@ import { Settings } from './settings.js'
 import { World } from './world.js'
 import { History } from './history.js'
 import { Datas } from './datas.js'
+import { Tile } from './tile.js'
 
 export class Grid {
 	static instance			//instance du singleton
@@ -10,20 +11,29 @@ export class Grid {
 	zoomMin = 1				//zoom minimum
 	zoomMax = 100			//zoom maximum
 	offset					//coordonnées x/y de la position du coin supérieur gauche du canvas dans la grille
-	currentPos				//position x/y de la souris dans la grille
-	selection				//positions de la grille selectionnées
-	selectedTiles			//les tiles selectionnées
+	cursor					//curseur de selection {start, end, select}
+	selection				//les tiles selectionnées
 	multiTouch = false		//si plusieurs touches sont enregistrées
 	history					//l'historique du paint
+	clipboard
 
 	//init
 	constructor() {
-		this.offset = {x: 0, y: 0}
-		this.setZoom(10)
+		this.reset()
 		this.addListeners()
-		this.history = new History()
 
 		Grid.instance = this
+	}
+
+	//reinitialiser les variables
+	reset() {
+		this.offset = (this.level) ? this.level.clampPos(0, 0) : {x: 0, y: 0}
+		this.cursor = {start : false, end : false, select : false}
+		this.selection = {current: false, tiles: [], positions : false}
+		this.setZoom(10)
+		this.clipboard = []
+		if(!this.history) this.history = new History()
+		else this.history.reset()
 	}
 
 	//ajouter les events listener sur le canvas
@@ -31,6 +41,7 @@ export class Grid {
 		//clonage pour eviter le double listener
 		World.cloneEl([Grid.$containers.canvas])
 		World.cloneEl([...Settings.$containers.history])
+		World.cloneEl([...Settings.$containers.copy])
 
 		let $canvas = Grid.$containers.canvas
 		$canvas.getContext('2d').imageSmoothingEnabled = false
@@ -51,6 +62,7 @@ export class Grid {
 		this.addSelectionListeners($canvas)
 		this.addPanZoomListeners($canvas)
 		this.addHistoryListeners(Settings.$containers.history)
+		this.addCopyListeners(Settings.$containers.copy)
 	}
 
 	//gestion des events de navigation dans l'historique
@@ -80,7 +92,6 @@ export class Grid {
 						break
 				}
 
-				console.log('history i : ' + this.history.current)
 				console.log({toRemove, toAdd})
 
 				if(!tiles) return
@@ -101,6 +112,82 @@ export class Grid {
 		})
 	}
 
+	//gestion des events de copier coller
+	addCopyListeners($btns) {
+		$btns.forEach($btn => {
+			$btn.addEventListener('click', evt => {
+				const actionBtn = $btn.dataset.action
+				console.log('action : ' + actionBtn)
+				if(!actionBtn) return
+
+				let tiles
+				let action
+				const sel = this.selection.selection
+				switch(actionBtn) {
+					//copier
+					case 'copy' : 
+						this.clipboard = this.getTilesInSelection(sel, this.level.currentLayer)
+						break
+
+					//couper
+					case 'cut' :
+						this.clipboard = this.getTilesInSelection(sel, this.level.currentLayer)
+						action = {
+							name 		: 'erase',
+							layer 		: this.level.currentLayer
+						}
+						tiles = this.paintAction(sel, action)
+						break
+
+					//coller
+					case 'paste' : 
+						if(!this.clipboard || this.clipboard.length <= 0) break
+
+						const dx = sel.x - this.clipboard[0].x
+						const dy = sel.y - this.clipboard[0].y
+						tiles = {removed : [], added : [], selected : []}
+						const layer = this.level.currentLayer
+
+						this.clipboard.forEach(tile => {
+							const x = tile.x + dx
+							const y = tile.y + dy
+							const s = {x, y, w: 1, h : 1}
+							action = {layer}
+							if(tile instanceof Tile) {
+								action.model = tile.ref
+								action.name = 'paint'
+							} else {
+								action.name = 'erase'
+							}				
+							const res = this.paintAction(s, action)
+
+							tiles.removed.push(...res.removed)
+							tiles.added.push(...res.added)
+							tiles.selected.push(...res.selected)
+						})
+
+						//nouvelle selection
+						const current = (tiles.added.length > 0) ? tiles.added[0] : false
+						const selection = {
+							x: this.clipboard[0].x + dx, 
+							y: this.clipboard[0].y + dy,
+							w: this.clipboard[this.clipboard.length - 1].x - this.clipboard[0].x + 1,
+							h: this.clipboard[this.clipboard.length - 1].y - this.clipboard[0].y + 1
+						}
+						this.selection = {current, tiles : tiles.added, selection}
+						if(current) current.setDatasHTML()
+						else Datas.clearHTML()
+						break
+				}
+				
+				//push dans l'historique
+				if(tiles && (tiles.removed.length > 0 || tiles.added.length > 0)) this.history.push(tiles)
+
+				this.draw()
+			})
+		})
+	}
+
 	//gestion d'event survol / selection
 	addSelectionListeners($canvas) {
 		//debut de survol
@@ -108,8 +195,8 @@ export class Grid {
 			if(!this.level || this.multiTouch) return
 
 			if ((evt.button === 0 && evt.pointerType !== "touch") || (evt.pointerType === "touch" && evt.isPrimary)) {
-				this.selection = {}
-				this.selection.start = this.pixelToGrid(evt.offsetX, evt.offsetY)
+				this.cursor.select = true
+				this.cursor.end = this.pixelToGrid(evt.offsetX, evt.offsetY)
 			}
 		})
 
@@ -117,21 +204,24 @@ export class Grid {
 		$canvas.addEventListener('pointerup', evt => {
 			if(!this.level || this.multiTouch) return
 
-			if(this.selection) {
-				const sel = this.parseSelection()
+			if(this.cursor.select) {
+				const selection = this.parseSelection()
 
 				let action = {
-					name : Settings.getInstance().currentTool,
-					layer : this.level.currentLayer,
-					model : Settings.getInstance().currentModel
+					name 		: Settings.getInstance().currentTool,
+					layer 		: this.level.currentLayer,
+					model 		: Settings.getInstance().currentModel.slug,
 				}
 
-				const tiles = this.paintAction(sel, action)
-				this.history.push(tiles)
-				this.selection = false
+				const tiles = this.paintAction(selection, action)
+				this.cursor.select = false
+				this.draw()
+				
+				if(tiles.removed.length > 0 || tiles.added.length > 0) this.history.push(tiles)
 
-				const detail = { tiles, action }
-				$canvas.dispatchEvent(new CustomEvent('paintAction', { detail: detail }))
+				//dispatch event paint
+				const detail = { tiles, action, selection }
+				$canvas.dispatchEvent(new CustomEvent('paint', { detail: detail }))
 			}
 		})
 
@@ -139,37 +229,27 @@ export class Grid {
 		$canvas.addEventListener('pointermove', evt => {
 			if(!this.level || this.multiTouch) return
 
-			//position courante
 			this.setCurrentPos(this.pixelToGrid(evt.offsetX, evt.offsetY))
-
-			//cadre de selection
-			if (this.selection) {
-				this.selection.end = this.pixelToGrid(evt.offsetX, evt.offsetY)
-			}
-
 			this.draw()
 		})
 
 		//sortie
 		$canvas.addEventListener('pointerleave', (evt) => {
-			this.currentPos = false
-			this.selection = false
+			this.cursor.start = false
+			this.cursor.end = false
+			this.cursor.select = false
 			this.draw()
 		})
 
-
-		//$canvas = Grid.$containers.canvas
-		$canvas.addEventListener('paintAction', evt => {
-			//selection
-			console.log('paint ' + evt.detail.action.name)
-			console.log(evt.detail.tiles)
-			this.selectedTiles = evt.detail.tiles.selected
-			if(this.selectedTiles.length > 0) {
-				const tile = this.selectedTiles[0]
-				tile.setDatasHTML()
-			} else {
-				Datas.clearHTML()
-			}
+		//paint
+		$canvas.addEventListener('paint', evt => {
+			const tiles = evt.detail.tiles.selected
+			const current = (tiles.length > 0) ? tiles[0] : false
+			const selection = ((tiles.length > 0)) ? evt.detail.selection : false
+			this.selection = {current, tiles, selection}
+			console.log(this.selection)
+			if(current) current.setDatasHTML()
+			else Datas.clearHTML()
 		})
 	}
 
@@ -222,8 +302,8 @@ export class Grid {
 					this.setZoom(this.zoom + scale)
 
 					//recentrer la vue sur la position courante
-					if(this.currentPos) {
-						const pos = {x : this.currentPos.x, y : this.currentPos.y}
+					if(this.cursor.start) {
+						const pos = {x : this.cursor.start.x, y : this.cursor.start.y}
 						const b = this.bounds
 						pos.x -= Math.floor((b.right - b.left) / 2)
 						pos.y -= Math.floor((b.bottom - b.top) / 2)
@@ -295,8 +375,8 @@ export class Grid {
 			this.setZoom(this.zoom + scale)
 
 			//recentrer la vue sur la position courante
-			if(this.currentPos) {
-				const pos = {x : this.currentPos.x, y : this.currentPos.y}
+			if(this.cursor.start) {
+				const pos = {x : this.cursor.start.x, y : this.cursor.start.y}
 				const b = this.bounds
 				pos.x -= Math.floor((b.right - b.left) / 2)
 				pos.y -= Math.floor((b.bottom - b.top) / 2)
@@ -347,7 +427,7 @@ export class Grid {
 
 						//ajouter la tile
 						if(noTile) {
-							tile = action.layer.addTile(c, l, action.model.slug)
+							tile = action.layer.addTile(c, l, action.model)
 							added.push(tile)
 						}
 						break
@@ -369,9 +449,7 @@ export class Grid {
 					//selectionner
 					case 'select' :
 						tile = action.layer.findTileAt(c, l)
-						if(tile) {
-							selected.push(tile)
-						}
+						if(tile) selected.push(tile)
 						break
 
 					//defaut
@@ -382,7 +460,6 @@ export class Grid {
 		}
 
 		this.level.edited = true
-		this.draw()
 
 		const tiles = {
 			removed,
@@ -395,7 +472,8 @@ export class Grid {
 
 	//definir la position courante
 	setCurrentPos(pos) {
-		this.currentPos = pos
+		//this.cursor.pos = pos
+		this.cursor.start = pos
 
 		if(pos) {
 			World.$containers.coords.x.innerHTML = 'x ' + pos.x.toString().padStart(4, "0")
@@ -405,9 +483,9 @@ export class Grid {
 
 	//parser la selection
 	parseSelection() {
-		if(!this.selection) return
-		const s = this.selection.start
-		const e = (this.selection.end) ? this.selection.end : this.selection.start
+		if(!this.cursor.select) return
+		const s = this.cursor.start
+		const e = (this.cursor.end) ? this.cursor.end : this.cursor.start
 		const x = (s.x > e.x) ? e.x : s.x
 		const y = (s.y > e.y) ? e.y : s.y
 
@@ -422,6 +500,28 @@ export class Grid {
 		}
 	}
 
+	//tableau des tiles depuis une selection
+	getTilesInSelection(sel, layer) {
+		if(!layer) {
+			alert('aucun calque selectionné')
+			return
+		}
+		if(layer.locked || !layer.visible) {
+			alert('le calque est verrouillé ou masqué')
+			return
+		}
+
+		const tiles = []
+		for(let l = sel.y; l < sel.y + sel.h; l++) {
+			for(let c = sel.x; c < sel.x + sel.w; c++) {
+				const tile = layer.findTileAt(c, l)
+				if(tile) tiles.push(tile)
+				else tiles.push({x: c, y: l})
+			}
+		}
+		return tiles
+	}
+
 	//recuperer le level en cours
 	get level() {
 		return World.getInstance().currentLevel
@@ -433,12 +533,7 @@ export class Grid {
 		World.getInstance().currentLevel = level
 		Datas.clearHTML()
 
-		if(level) {
-			this.history.reset()
-			this.setZoom(10)
-			this.offset = level.clampPos(0, 0)
-		}
-
+		this.reset()
 		this.draw()
 	}
 
@@ -504,22 +599,25 @@ export class Grid {
 		if(!this.level) return
 
 		//dessiner le calque enregistré
-		this.level.layers.forEach(layer => {
-			if(!layer.visible) return
+		const layers = this.level.layers.filter(l => l.visible)
+		layers.forEach(layer => {
 			layer.draw(this.bounds, this.zoom, Grid.ctx)
-
-			layer.relations.forEach(r => this.drawRelation(r))
-			layer.pathes.forEach(p => this.drawPath(p))
 		})
 
 		//dessiner la bordure du niveau
 		this.drawBorders()
 
-		//dessiner les curseurs
-		this.drawCursors()
-
 		//dessiner la tile selectionnée
 		this.drawSelected()
+
+		//dessiner les path et relations
+		layers.forEach(layer => {
+			layer.relations.forEach(r => this.drawRelation(r))
+			layer.pathes.forEach(p => this.drawPath(p))
+		})
+
+		//dessiner les curseurs
+		this.drawCursors()
 	}
 
 	//dessiner la bordure du level
@@ -538,16 +636,16 @@ export class Grid {
 		const ctx = Grid.ctx
 		const z = this.zoom
 
-		if(this.selection) {
+		if(this.cursor.select) {
 			const s = this.parseSelection()
 			const origin = this.gridToPixel(s.x, s.y, z)
 
-			ctx.fillStyle = Grid.styles.cursor.color
+			ctx.fillStyle = Grid.styles.cursor.multiple.color
 			ctx.fillRect(origin.x, origin.y, s.w * z, s.h * z)
-		} else if(this.currentPos) {
-			ctx.strokeStyle = Grid.styles.cursor.color
-			ctx.lineWidth = Grid.styles.cursor.width
-			const pos = this.gridToPixel(this.currentPos.x, this.currentPos.y, z)
+		} else if(this.cursor.start) {
+			ctx.strokeStyle = Grid.styles.cursor.current.color
+			ctx.lineWidth = Grid.styles.cursor.current.width
+			const pos = this.gridToPixel(this.cursor.start.x, this.cursor.start.y, z)
 			ctx.strokeRect(pos.x, pos.y, z, z)
 		}
 	}
@@ -558,14 +656,20 @@ export class Grid {
 		const z = this.zoom
 
 		if(!ctx) ctx = Grid.ctx
-		if(this.selectedTiles && this.selectedTiles.length > 0) {
-			const t = this.selectedTiles[0]
 
-			ctx.strokeStyle = Grid.styles.selected.color
-			ctx.lineWidth = Grid.styles.selected.width
+		const sel = this.selection
+
+		const tiles = (sel.selection) ? this.getTilesInSelection(sel.selection, this.level.currentLayer) : []
+		//const tiles = this.selection.tiles
+
+		tiles.forEach(t => {
+			ctx.strokeStyle = Grid.styles.selected.current.color
+			ctx.lineWidth = Grid.styles.selected.current.width
+			ctx.fillStyle = Grid.styles.selected.multiple.color
 			const pos = this.gridToPixel(t.x, t.y, z)
-			ctx.strokeRect(pos.x, pos.y, z, z)
-		}
+			if(t != sel.current) ctx.fillRect(pos.x, pos.y, z, z)
+			else ctx.strokeRect(pos.x, pos.y, z, z)
+		})
 	}
 
 	//dessiner une relation
@@ -661,12 +765,23 @@ export class Grid {
 				width 		: 5
 			},
 			cursor 		: {
-				color 		: '#DD0066',
-				width 		: 3
+				current		: {
+					color 		: '#DD0066',
+					width 		: 3
+				},
+				multiple	: {
+					color 		: '#DD006655',
+				}
+				
 			},
 			selected 	: {
-				color 		: '#22DD00',
-				width 		: 3
+				current		: {
+					color 		: '#22DD00',
+					width 		: 3
+				},
+				multiple	: {
+					color 		: '#22DD0055',
+				}
 			},
 			relation 	: {
 				color 		: '#CCCC00',

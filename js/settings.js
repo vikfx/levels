@@ -162,7 +162,12 @@ export class Settings {
 		//history
 		const $historyContainer = document.querySelector('#history-tools')
 		if(!$historyContainer) throw new Error('impossible de trouver #history-tools')
-			const $historyTools = $historyContainer.querySelectorAll(':scope > li')
+		const $historyTools = $historyContainer.querySelectorAll(':scope > li')
+
+		//history
+		const $copyContainer = document.querySelector('#copy-tools')
+		if(!$copyContainer) throw new Error('impossible de trouver #copy-tools')
+		const $copyTools = $copyContainer.querySelectorAll(':scope > li')
 	
 		//palette
 		const $palettesContainer = document.querySelector('#palettes')
@@ -189,7 +194,8 @@ export class Settings {
 				palette 	: $paletteForm
 			},
 			tools 		: $tools,
-			history 	: $historyTools
+			history 	: $historyTools,
+			copy 		: $copyTools
 		}
 	}
 }

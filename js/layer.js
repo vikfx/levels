@@ -96,13 +96,13 @@ export class Layer {
 		})
 
 		//bouton toggle tiles
-		const $toggle = document.createElement('button')
-		$toggle.dataset.action = 'toggle'
-		$toggle.innerHTML = "replier"
-		$toggle.addEventListener('click', evt => {
-			this.$tileContainer.hidden = !this.$tileContainer.hidden
-			$toggle.innerHTML = (this.$tileContainer.hidden) ? 'deplier' : 'replier'
-		})
+		// const $toggle = document.createElement('button')
+		// $toggle.dataset.action = 'toggle'
+		// $toggle.innerHTML = "replier"
+		// $toggle.addEventListener('click', evt => {
+		// 	this.$tileContainer.hidden = !this.$tileContainer.hidden
+		// 	$toggle.innerHTML = (this.$tileContainer.hidden) ? 'deplier' : 'replier'
+		// })
 		
 		//bouton toggle tiles
 		const $delete = document.createElement('button')
@@ -122,7 +122,7 @@ export class Layer {
 		$h.appendChild($visible)
 		$h.appendChild($locked)
 		$h.appendChild($input)
-		$h.appendChild($toggle)
+		//$h.appendChild($toggle)
 		$h.appendChild($delete)
 		$li.appendChild($h)
 		$li.appendChild($ul)
@@ -177,8 +177,10 @@ export class Layer {
 
 		//path et relation
 		if(tile.datas.path) this.addPath(tile, tile.datas.path)
-		if(tile.datas.relation) this.addRelation(tile, tile.datas.relation)
-		
+		if(tile.datas.relation) {
+			tile.datas.relation.datas.relation = tile
+			this.addRelation(tile, tile.datas.relation)
+		}
 		return tile
 	}
 
@@ -187,6 +189,8 @@ export class Layer {
 		const i = this.chunks.pop(tile)
 		if(i >= 0) tile.clear()
 		this.removePath(tile)
+
+		if(tile.datas.relation) tile.datas.relation.datas.relation = null
 		this.removeRelation(tile)
 	}
 
@@ -210,6 +214,9 @@ export class Layer {
 			this.removeRelation(tileA)
 			this.removeRelation(tileB)
 		}
+
+		// tileA.datas.relation = tileB
+		// tileB.datas.relation = tileA
 		this.relations.push([tileA, tileB])
 	}
 
@@ -220,6 +227,7 @@ export class Layer {
 		if(!relation) return
 		const i = this.relations.indexOf(relation)
 		if(i < 0) return
+
 		this.relations.splice(i, 1)
 	}
 	

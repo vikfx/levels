@@ -1,0 +1,21 @@
+{
+  "name": "Level Design",
+  "short_name": "LD",
+  "start_url": "./level.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#203343",
+  "theme_color": "#203343",
+  "icons": [
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

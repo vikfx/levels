@@ -64,6 +64,27 @@ input, select {
     padding: var(--space-s);
 }
 
+button:active, input[type=submit]:active {
+	border: var(--button-border);
+}
+
+.button {
+	border: var(--button-border);
+	padding: var(--space-s);
+	background-color: transparent;
+}
+
+.button.on {
+    border-color: var(--color-accent3);
+    background-color: var(--color-accent3);
+    color: var(--color-accent2);
+}
+
+.button:active {
+    border-color: var(--color-accent3);
+    color: var(--color-accent3);
+}
+
 
 /*****
 HEADER
@@ -77,10 +98,7 @@ HEADER
 }
 
 #main-header .button, .modal .button {
-	border: var(--button-border);
-	padding: var(--space-s);
 	border-color: var(--color-accent0);
-	background-color: transparent;
 	font-size: 1em;
 }
 
@@ -235,16 +253,6 @@ SIDEBAR
     gap: var(--space-xs);
 }
 
-.tools > li {
-    border: var(--button-border);
-    padding: var(--space-s);
-}
-
-.tools > li.on {
-    border-color: var(--color-accent3);
-    background-color: var(--color-accent3);
-    color: var(--color-accent2);
-}
 
 /* model tiles */
 .models {
@@ -312,7 +320,7 @@ SIDEBAR
     background-color: var(--color-accent3);
 }
 
-.layer .tiles {
+/* .layer .tiles {
 	margin-left: 10px;
 }
 
@@ -330,7 +338,7 @@ SIDEBAR
     border: var(--button-border);
     width: 32px;
     aspect-ratio: 1;
-}
+} */
 
 /***** world mode *****/
 /* levels */

@@ -6,6 +6,13 @@
 	<title>Level Editor 0.0</title>
 
 	<link rel="stylesheet" href="./css/main.css">
+	<link rel="manifest" href="manifest.json">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Mon Application">
+	<link rel="apple-touch-icon" href="icons/icon-192.png">
+
 </head>
 <body>
 	<header id="main-header">
@@ -25,10 +32,13 @@
 		
 		<h1>LEVEL EDITOR 0.0</h1>
 		
-		<form id="login" class="right-col">
-			<input type="password" name="api-key" value="" placeholder="api key">
-			<button type="submit" class="button">connexion</button>
-		</form>
+		<div>
+			<form id="login">
+				<input type="password" name="api-key" value="" placeholder="api key">
+				<button type="submit" class="button">connexion</button>
+				<a href="" id="fullscreen">fullscreen</a>
+			</form>
+		</div>
 	</header>
 
 	<div id="page">
@@ -52,13 +62,18 @@
 				<div id="level-mode" class="tab">
 					<h3>Tools</h3>
 					<ul id="history-tools" class="tools">
-						<li data-action="undo">undo</li>
-						<li data-action="redo">redo</li>
+						<li class="button" data-action="undo">undo</li>
+						<li class="button" data-action="redo">redo</li>
+					</ul>
+					<ul id="copy-tools" class="tools">
+						<li class="button" data-action="copy">copy</li>
+						<li class="button" data-action="cut">cut</li>
+						<li class="button" data-action="paste">paste</li>
 					</ul>
 					<ul id="palette-tools" class="tools">
-						<li data-action="paint">pinceau</li>
-						<li data-action="erase">gomme</li>
-						<li data-action="select">selecteur</li>
+						<li class="button" data-action="paint">pinceau</li>
+						<li class="button" data-action="erase">gomme</li>
+						<li class="button" data-action="select">selecteur</li>
 					</ul>
 
 					<div id="palettes">
@@ -169,6 +184,12 @@
 
 				<!-- #tile-mode -->
 				<div id="tile-mode" class="tab">
+					<div id="tile-selection">
+						<p><span>0</span> tile(s) selectionnée(s)</p>
+						<button data-action="prev">prev</button>
+						<button data-action="next">next</button>
+					</div>
+
 					<div id="tile-infos">
 						<h3>infos tile</h3>
 						<input type="text" name="tile-name" value="" placeholder="nom de la tile">

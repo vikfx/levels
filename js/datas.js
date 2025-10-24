@@ -1,15 +1,16 @@
 import { World } from './world.js'
 import { Grid } from './grid.js'
+import { Tile } from './tile.js'
 
 export class Datas {
-	tile
-	_relation
-	path
-	datas
-	_name
+	tile				//tile rattaché aux datas
+	_name				//nom en local
+	_relation			//relation en local
+	path				//chemin
+	datas				//le tableau des autres datas
 
+	//init
 	constructor(datas, tile) {
-		//if(datas.name) this.name = datas.name
 		this.tile = tile
 		this.load(datas)
 	}
@@ -32,8 +33,8 @@ export class Datas {
 		if(r.length != 2) return
 		const x = Number(r[0])
 		const y = Number(r[1])
-		return this.tile.layer.findTileAt(x, y) 
-		
+
+		return this.tile.layer.findTileAt(x, y)
 	}
 	
 	//attribuer la relation selon la tile
@@ -42,11 +43,33 @@ export class Datas {
 	}
 
 	//creer le html dans le parent
-	createHTML() {
+	createHTML(tile) {
 		//clone
 		let $c = Datas.$containers
-		World.cloneEl([$c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
+		World.cloneEl([$c.selection.container, $c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
 		
+		//selection
+		$c = Datas.$containers.selection
+		$c.qty.innerHTML = Grid.getInstance().selection.tiles.length
+		$c.prev.addEventListener('click', evt => {
+			const sel = Grid.getInstance().selection
+			if(sel.tiles.length <= 0) return
+			let i = sel.tiles.indexOf(sel.current)
+			i = (i <= 0) ? sel.tiles.length - 1 : i - 1
+			sel.current = sel.tiles[i]
+			sel.current.setDatasHTML()
+			Grid.getInstance().draw()
+		}) 
+		$c.next.addEventListener('click', evt => {
+			const sel = Grid.getInstance().selection
+			if(sel.tiles.length <= 0) return
+			let i = sel.tiles.indexOf(sel.current)
+			i = (i >= sel.tiles.length - 1) ? 0 : i + 1
+			sel.current = sel.tiles[i]
+			sel.current.setDatasHTML()
+			Grid.getInstance().draw()
+		})
+
 		//infos
 		$c = Datas.$containers.infos
 		$c.name.value = this.name
@@ -74,31 +97,36 @@ export class Datas {
 		$c.name.innerHTML = (this.relation) ? this.relation.name : ''
 		$c.select.addEventListener('click', evt => {
 			const $canvas = Grid.$containers.canvas
-			$canvas.addEventListener('paintAction', selectRelation, {capture : true})
+			$canvas.addEventListener('paint', selectRelation, {capture : true})
 			const data = this
 
 			//event once
 			function selectRelation(e) {
 				e.stopImmediatePropagation()
-				const tile = (e.detail.tiles.selected.length > 0) ? e.detail.tiles.selected[0] : null
-				if(tile) {
-					data.setRelation(tile)
+				const t = (e.detail.tiles.selected.length > 0) ? e.detail.tiles.selected[0] : null
+				if(t) {
+					data.setRelation(t)
+					data.tile.layer.addRelation(data.tile, t)
 					Datas.$containers.relation.name.innerHTML = tile.name
 				}
 
-				$canvas.removeEventListener('paintAction', selectRelation, {capture : true})
+				$canvas.removeEventListener('paint', selectRelation, {capture : true})
 			}
 		})
 		$c.goto.addEventListener('click', evt => {
 			if(this.relation) {
-				this.relation.setDatasHTML()
 				const grid = Grid.getInstance()
-				grid.selectedTiles = [this.relation]
+				if(grid.selection.tiles.indexOf(this.relation) < 0) grid.selection.tiles = [this.relation]
+				grid.selection.current = this.relation
+				this.relation.setDatasHTML()
 				grid.draw()
 			}
 		})
 		$c.delete.addEventListener('click', evt => {
 			this.setRelation(null)
+
+			this.tile.layer.removeRelation(this.tile)
+
 			Datas.$containers.relation.name.innerHTML = ''	
 			Grid.getInstance().draw()
 		})
@@ -191,7 +219,7 @@ export class Datas {
 		$iy.value = y
 		$iy.addEventListener('change', evt => {
 			const i = this.path.findIndex(p => (p.x == x && p.y == y))
-			if(i) this.path[i].y = $iy.value
+			if(i >= 0) this.path[i].y = $iy.value
 			y = $iy.value
 			this.tile.layer.addPath(this.tile, this.path)
 			Grid.getInstance().draw()
@@ -270,9 +298,9 @@ export class Datas {
 		this.relation = tile
 		if(tile) {
 			tile.datas.relation = this.tile
-			this.tile.layer.addRelation(this.tile, tile)
+			//this.tile.layer.addRelation(this.tile, tile)
 		} else {
-			this.tile.layer.removeRelation(this.tile)
+			//this.tile.layer.removeRelation(this.tile)
 		}
 	}
 	
@@ -280,8 +308,12 @@ export class Datas {
 	static clearHTML() {
 		//clone
 		let $c = Datas.$containers
-		World.cloneEl([$c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
+		World.cloneEl([$c.selection.container, $c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
 		
+		//selection
+		$c = Datas.$containers.selection
+		$c.qty.innerHTML = 0
+
 		//infos
 		$c = Datas.$containers.infos
 		$c.name.value = ''
@@ -379,6 +411,15 @@ export class Datas {
 	
 	//containers html
 	static get $containers() {
+		//selection
+		const $selection = document.querySelector('#tile-selection')
+		if(!$selection) throw new Error('pas de container pour la selection des tiles')
+		const $qty = $selection.querySelector('p span')
+		const $bprev = $selection.querySelector('button[data-action=prev]')
+		const $bnext = $selection.querySelector('button[data-action=next]')
+		if(!$qty || !$bnext || !$bprev) throw new Error('le containers #tile-selection ne contient pas les elements adequats')
+
+
 		//infos
 		const $infos = document.querySelector('#tile-infos')
 		if(!$infos) throw new Error('pas de container pour les infos de la tile')
@@ -387,7 +428,7 @@ export class Datas {
 		const $iy = $infos.querySelector('.pos-y span')
 		const $idelete = $infos.querySelector('button[data-action=delete]')
 		const $iref = $infos.querySelector('select[name=reference]')
-		if(!$iname || !$ix || !$iy || !$idelete || !$iref) throw new Error('le containers #tile-infos ne comporte pas les elements adequats')
+		if(!$iname || !$ix || !$iy || !$idelete || !$iref) throw new Error('le containers #tile-infos ne contient pas les elements adequats')
 			
 		//relation
 		const $relation = document.querySelector('#tile-relation')
@@ -396,7 +437,7 @@ export class Datas {
 		const $bselect = $relation.querySelector('button[data-action=select]')
 		const $bgoto = $relation.querySelector('button[data-action=goto]')
 		const $bdelete = $relation.querySelector('button[data-action=delete]')
-		if(!$rname || !$bselect || !$bgoto || !$bdelete) throw new Error('le containers #tile-relation ne comporte pas les elements adequats')
+		if(!$rname || !$bselect || !$bgoto || !$bdelete) throw new Error('le containers #tile-relation ne contient pas les elements adequats')
 			
 		//path
 		const $path = document.querySelector('#tile-path')
@@ -404,22 +445,28 @@ export class Datas {
 		const $pul = $path.querySelector(':scope > ul')
 		const $pdelete = $path.querySelector(':scope > button[data-action=delete]')
 		const $pform = $path.querySelector('#new-point')
-		if(!$pul || !$pform || !$pdelete) throw new Error('le containers #tile-path ne comporte pas les elements adequats')
+		if(!$pul || !$pform || !$pdelete) throw new Error('le containers #tile-path ne contient pas les elements adequats')
 		const $pfx = $pform.querySelector('input[name=x]')
 		const $pfy = $pform.querySelector('input[name=y]')
-		if(!$pfx || !$pfy) throw new Error('le containers #new-point ne comporte pas les elements adequats')
+		if(!$pfx || !$pfy) throw new Error('le containers #new-point ne contient pas les elements adequats')
 
 		//datas
 		const $datas = document.querySelector('#tile-datas')
 		if(!$datas) throw new Error('pas de container pour les datas de la tile')
 		const $dul = $datas.querySelector(':scope > ul')
 		const $dform = $datas.querySelector('#new-data')
-		if(!$dul || !$dform) throw new Error('le containers #tile-datas ne comporte pas les elements adequats')
+		if(!$dul || !$dform) throw new Error('le containers #tile-datas ne contient pas les elements adequats')
 		const $dfk = $dform.querySelector('input[name=key]')
 		const $dfv = $dform.querySelector('input[name=val]')
-		if(!$dfk || !$dfv) throw new Error('le containers #new-data ne comporte pas les elements adequats')
+		if(!$dfk || !$dfv) throw new Error('le containers #new-data ne contient pas les elements adequats')
 		
 		return {
+			selection 		: {
+				container	: $selection,
+				qty 		: $qty,
+				prev 		: $bprev,
+				next 		: $bnext
+			},
 			infos 		: {
 				container	: $infos,
 				name 		: $iname,

@@ -15,7 +15,6 @@ export class Level {
 	minimap										//l'image du level
 	edited = false								//si le level a été modifié après son dernier enregistrement
 
-
 	//init
 	constructor(name, slug, parent = '', bounds = {}, layers = []) {
 		this.slug = slug

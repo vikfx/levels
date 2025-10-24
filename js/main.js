@@ -11,12 +11,29 @@ document.addEventListener('DOMContentLoaded', (evt) => {
 	console.log('hello main')
 
 	//loadEruda()
+	initFullScreen()
+	
 	initCanvas()
+
 
 	authenticate()
 	projectRequest()
 	manageTabs()
 })
+
+//init le bouton fullscreen
+function initFullScreen() {
+	const $btn = document.querySelector('#fullscreen')
+
+	if(!$btn) return
+	$btn.addEventListener('click', evt => {
+		evt.preventDefault()
+  		if (!document.fullscreenElement) 
+			document.documentElement.requestFullscreen()
+  		else
+    		document.exitFullscreen()
+	})
+}
 
 //init le resize des canvas
 function initCanvas() {
