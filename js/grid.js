@@ -170,6 +170,37 @@ export class Grid {
 							}				
 							const res = this.paintAction(s, action)
 
+							//clone datas
+							if(res.added.length > 0) {
+								const clone = res.added[0]
+
+								if(tile._name != '')
+									clone.name = tile.name + ' (copy)'
+
+								//cloner le path
+								if(tile.datas.path) {
+									clone.datas.path = []
+									tile.datas.path.forEach(p => {
+										clone.datas.path.push({x: Number(p.x) + dx, y: Number(p.y) + dy})
+									})
+									clone.layer.addPath(clone, clone.datas.path)
+								}
+								
+								//cloner la relation si la relation est dans la selection
+								if(tile.datas.relation) {
+									const rel = this.clipboard.find(t => t == tile.datas.relation)
+									if(rel) {
+										clone.datas._relation = (rel.x + dx) + ',' + (rel.y + dy)
+										clone.layer.addRelation(clone, clone.datas.relation)
+									}
+								}
+
+								//cloner les autres datas
+								if(tile.datas.datas) {
+									clone.datas.datas = structuredClone(tile.datas.datas)
+								}
+							}
+
 							tiles.removed.push(...res.removed)
 							tiles.added.push(...res.added)
 							tiles.selected.push(...res.selected)

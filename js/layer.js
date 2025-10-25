@@ -215,8 +215,6 @@ export class Layer {
 			this.removeRelation(tileB)
 		}
 
-		// tileA.datas.relation = tileB
-		// tileB.datas.relation = tileA
 		this.relations.push([tileA, tileB])
 	}
 
