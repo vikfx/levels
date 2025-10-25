@@ -10,12 +10,13 @@ export class Grid {
 	zoom					//niveau de zoom
 	zoomMin = 1				//zoom minimum
 	zoomMax = 100			//zoom maximum
+	zoomSensibility = 10	//sensibilité du pincement pour le zoom
 	offset					//coordonnées x/y de la position du coin supérieur gauche du canvas dans la grille
 	cursor					//curseur de selection {start, end, select}
 	selection				//les tiles selectionnées
 	multiTouch = false		//si plusieurs touches sont enregistrées
 	history					//l'historique du paint
-	clipboard
+	clipboard				//presse papier pour le copier/coller
 
 	//init
 	constructor() {
@@ -57,7 +58,6 @@ export class Grid {
 		//supprimer les comportements natifs
 		$canvas.addEventListener('touchmove', evt => { evt.preventDefault() }, { passive: false }) // Empêcher zoom/scroll natif de la page
 		$canvas.addEventListener('contextmenu', evt => evt.preventDefault()) // désactive menu contextuel
-
 
 		//ajouter les listener
 		this.addSelectionListeners($canvas)
@@ -295,33 +295,35 @@ export class Grid {
 		$canvas.addEventListener('touchmove', evt => {
 			if(!this.level || !this.multiTouch) return
 
-			const [t1, t2] = evt.touches
+			const [t1, t2] = [...evt.touches].map(t => this.touchToPos(t))
 
 			// distance actuelle (pour zoom)
-			const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY)
+			const dist = Math.hypot(t2.x - t1.x, t2.y - t1.y)
 
-			// milieu des doigts (pour pan)
+			// milieu des doigts
 			const pos = {
-				x: (t1.clientX + t2.clientX) / 2,
-				y: (t1.clientY + t2.clientY) / 2
+				x: (t1.x + t2.x) / 2,
+				y: (t1.y + t2.y) / 2
 			}
+
+			let dx, dy
 
 			// zoom
 			if(lastDist) {
-				if((Math.abs(dist - lastDist) > 5)) {
+				if((Math.abs(dist - lastDist) > this.zoomSensibility)) {
+					const op = this.pixelToGrid(pos.x, pos.y)
+					
 					const scale = (dist / lastDist > 1) ? 1 : -1
 					this.setZoom(this.zoom + scale)
-
+					
 					//recentrer la vue sur la position courante
-					if(this.cursor.start) {
-						const pos = {x : this.cursor.start.x, y : this.cursor.start.y}
-						const b = this.bounds
-						pos.x -= Math.floor((b.right - b.left) / 2)
-						pos.y -= Math.floor((b.bottom - b.top) / 2)
+					const np = this.pixelToGrid(pos.x, pos.y)
+					dx = op.x - np.x
+					dy = op.y - np.y
 
-						this.offset = this.level.clampPos(pos.x, pos.y)
+					if(Math.abs(dx) >= 1 || Math.abs(dy) >= 1) {
+						this.offset = this.level.clampPos(this.offset.x + dx, this.offset.y + dy)
 					}
-
 					lastDist = dist
 				}
 			} else {
@@ -330,14 +332,11 @@ export class Grid {
 
 			// pan
 			if(lastPos) {
-				const delta = {}
-				delta.x = lastPos.x - pos.x
-				delta.y = lastPos.y - pos.y
+				dx = (lastPos.x - pos.x) / this.zoom
+				dy = (lastPos.y - pos.y) / this.zoom
 
-				const incX = delta.x / this.zoom
-				const incY = delta.y / this.zoom
-				if(Math.abs(incX) >= 1 || Math.abs(incY) >= 1) {
-					this.offset = this.level.clampPos(this.offset.x + incX, this.offset.y + incY)
+				if(Math.abs(dx) >= 1 || Math.abs(dy) >= 1) {
+					this.offset = this.level.clampPos(this.offset.x + dx, this.offset.y + dy)
 					lastPos = pos
 				}
 			} else {
@@ -354,22 +353,23 @@ export class Grid {
 		$canvas.addEventListener('pointerdown', evt => {
 			if(evt.pointerType === 'mouse' && evt.button === 2) {
 				mouseR = true
-				lastPos = { x: evt.clientX, y: evt.clientY }
+				lastPos = this.touchToPos(evt)
 			}
 		})
 
 		//drag pan
 		$canvas.addEventListener('pointermove', evt => {
 			if(mouseR) {
+				const pos = this.touchToPos(evt)
 				const delta = {}
-				delta.x = lastPos.x - evt.clientX
-				delta.y = lastPos.y - evt.clientY
+				delta.x = lastPos.x - pos.x
+				delta.y = lastPos.y - pos.y
 
 				const incX = delta.x / this.zoom
 				const incY = delta.y / this.zoom
 				if(Math.abs(incX) >= 1 || Math.abs(incY) >= 1) {
 					this.offset = this.level.clampPos(this.offset.x + incX, this.offset.y + incY)
-					lastPos = { x: evt.clientX, y: evt.clientY }
+					lastPos = pos
 				}
 
 				this.draw()
@@ -481,6 +481,16 @@ export class Grid {
 		
 		return tiles
 	}
+
+	//convertir un touch en position dans le canvas
+	touchToPos(touch) {
+		const $canvas = Grid.$containers.canvas
+		const rect = $canvas.getBoundingClientRect(); // position et taille du canvas dans la fenêtre
+		return {
+			x: (touch.clientX - rect.left) * ($canvas.width / rect.width),
+			y: (touch.clientY - rect.top)  * ($canvas.height / rect.height)
+	};
+}
 
 	//definir la position courante
 	setCurrentPos(pos) {
