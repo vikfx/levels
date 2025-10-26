@@ -109,7 +109,7 @@ export class Level {
 			$ib.addEventListener('change', evt => {
 				const $i = evt.currentTarget
 				const b = this.bounds
-				b[$i.name] = $i.value
+				b[$i.name] = Number($i.value)
 				this.bounds = b
 
 				this.edited = true
@@ -228,10 +228,10 @@ export class Level {
 	//definir le bounds et par extension la largeur/hauteur et les coordonnées d'origine
 	set bounds(value) {
 		if(!value) value = {}
-		if(value.top == undefined) value.top = 0
-		if(value.bottom == undefined) value.bottom = 0
-		if(value.left == undefined) value.left = 0
-		if(value.right == undefined) value.right = 0
+		value.top = (value.top != undefined) ? Number(value.top) : 0
+		value.bottom = (value.bottom != undefined) ? Number(value.bottom) : 0
+		value.left = (value.left != undefined) ? Number(value.left) : 0
+		value.right = (value.right != undefined) ? Number(value.right) : 0
 		
 		const w = value.right - value.left
 		const h = value.bottom - value.top
