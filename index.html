@@ -74,7 +74,7 @@
 					<ul id="palette-tools" class="tools">
 						<li class="button" data-action="paint">pinceau</li>
 						<li class="button" data-action="erase">gomme</li>
-						<li class="button" data-action="select">selecteur</li>
+						<li class="button default" data-action="select">selecteur</li>
 					</ul>
 
 					<div id="palettes">
@@ -262,19 +262,6 @@
 			<canvas id="world-map" class="on"></canvas>
 			<nav></nav>
 		</main>
-
-		<div  id="welcome" class="modal">
-			<div class="modal-box">
-				<h2>Bienvenue, par où voulez-vous commencer ?</h2>
-				<form class="project">
-					<input type="submit" formaction="/api/project/" formmethod="GET" value="ouvrir un projet" class="button"></button>
-					<input type="submit" formaction="/api/project/" formmethod="POST" value="nouveau projet" class="button"></button>
-					<input type="submit" formaction="/api/import/" formmethod="POST" value="importer un projet" class="button"></button>
-					<input type="text" name="project-name" value="" placeholder="nom du projet">
-					<input type="file" name="project-json">
-				</form>
-			</div>
-		</div>
 
 		<div id="alert" class="modal">
 			<div class="modal-box">

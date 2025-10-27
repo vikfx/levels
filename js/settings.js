@@ -37,7 +37,7 @@ export class Settings {
 				})
 			})
 
-			if(i == 0) $tool.classList.add('on')
+			if($tool.classList.contains('default')) $tool.classList.add('on')
 			else $tool.classList.remove('on')
 		})
 
