@@ -1,3 +1,5 @@
+import { ModalBox } from './modalbox.js'
+
 export class FetchAPI {
 	static apiURL = '/api/'
 
@@ -27,9 +29,9 @@ export class FetchAPI {
 			if(output.error) {
 				FetchAPI.$loader.hidden = true
 				if(output.error == 'Unauthorized') {
-					alert('erreur de connexion, reconnectez-vous')
+					ModalBox.alert('erreur de connexion, reconnectez-vous')
 				} else {
-					alert(output.error)
+					ModalBox.alert(output.error)
 					throw new Error(output.error)
 				}
 

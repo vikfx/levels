@@ -1,6 +1,6 @@
 import { World } from './world.js'
 import { Grid } from './grid.js'
-import { Tile } from './tile.js'
+import { ModalBox } from './modalbox.js'
 
 export class Datas {
 	tile				//tile rattaché aux datas
@@ -187,7 +187,7 @@ export class Datas {
 			const v = Datas.$containers.datas.new.val.value
 			if(k === '' || v === '') return
 			if(k == 'path' || k == 'relation') {
-				alert('la clé ' + k + ' est reservée')
+				ModalBox.alert('la clé ' + k + ' est reservée')
 				return
 			}
 			this.datas[k] = v

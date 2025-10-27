@@ -1,5 +1,6 @@
 import { Level } from './level.js'
 import { Grid } from './grid.js'
+import { ModalBox } from './modalbox.js'
 
 export class World {
 	static instance			//instance du singleton
@@ -106,9 +107,9 @@ export class World {
 			}
 			
 			if(datas.slug == '')
-				alert('le level doit avoir un slug')
+				ModalBox.alert('le level doit avoir un slug')
 			else if (this.levels.findIndex(lvl => lvl.slug == datas.slug) >= 0)
-				alert('un level avec ce slug existe déjà')
+				ModalBox.alert('un level avec ce slug existe déjà')
 			else
 				this.addLevel(datas).edited = true
 		})
@@ -127,9 +128,9 @@ export class World {
 			}
 			
 			if(datas.slug == '')
-				alert('le layer doit avoir un slug')
+				ModalBox.alert('le layer doit avoir un slug')
 			else if (this.currentLevel.layers.findIndex(l => l.slug == datas.slug) >= 0)
-				alert('un layer avec ce slug existe déjà dans ce level')
+				ModalBox.alert('un layer avec ce slug existe déjà dans ce level')
 			else
 				this.currentLevel.addLayer(datas, true)
 		})

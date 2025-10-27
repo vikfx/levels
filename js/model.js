@@ -1,4 +1,5 @@
 import { FetchAPI } from './fetchAPI.js'
+import { ModalBox } from './modalbox.js'
 import { Settings } from './settings.js'
 
 export class Model {
@@ -46,7 +47,12 @@ export class Model {
 		const $li = document.createElement('li')
 		$li.id = this.slug
 		let longclick = false
-		let timer		
+		let timer
+		//blocage des comportement par defaut
+		$li.addEventListener('contextmenu', evt => evt.preventDefault())
+		$li.addEventListener('touchstart', evt => evt.preventDefault())
+		
+
 		$li.addEventListener('pointerdown', (evt) => {
 			evt.preventDefault()
 					
@@ -55,7 +61,7 @@ export class Model {
 			timer = setTimeout(() => { longclick = true }, 800)
 		})
 				
-		$li.addEventListener('pointerup', (evt) => {
+		$li.addEventListener('pointerup', async (evt) => {
 			evt.preventDefault()
 					
 			//rendre actif
@@ -64,7 +70,7 @@ export class Model {
 			//supprimer le bouton
 			if(timer) clearTimeout(timer)
 			if(longclick) {
-				const ok = confirm('Voulez-vous supprimer ce model?')
+				const ok = await ModalBox.confirm('Voulez-vous supprimer ce model?')
 				if(ok) {
 					const pname = localStorage.getItem('projectName')
 					const url = FetchAPI.apiURL + 'project/' + pname + '/palette/' + this.palette.slug + '/model/' + this.slug

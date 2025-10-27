@@ -2,6 +2,7 @@ import { Tile } from './tile.js'
 import { World } from './world.js'
 import { Grid } from './grid.js'
 import { Chunks } from './chunks.js'
+import { ModalBox } from './modalbox.js'
 
 export class Layer {
 	slug				//le slug du layer
@@ -108,8 +109,8 @@ export class Layer {
 		const $delete = document.createElement('button')
 		$delete.dataset.action = 'delete'
 		$delete.innerHTML = "supprimer"
-		$delete.addEventListener('click', evt => {
-			const ok = confirm('vous êtes sur le point de supprimer ce calque. Êtes-vous sûr?')
+		$delete.addEventListener('click', async evt => {
+			const ok = await ModalBox.confirm('vous êtes sur le point de supprimer ce calque. Êtes-vous sûr?')
 			if(ok) this.level.removeLayer(this)
 		})
 

@@ -3,6 +3,7 @@ import { World } from './world.js'
 import { History } from './history.js'
 import { Datas } from './datas.js'
 import { Tile } from './tile.js'
+import { ModalBox } from './modalbox.js'
 
 export class Grid {
 	static instance			//instance du singleton
@@ -433,11 +434,11 @@ export class Grid {
 	//appliquer l'action en sortie de selection
 	paintAction(sel, action) {
 		if(!action.layer) {
-			alert('aucun calque selectionné')
+			ModalBox.alert('aucun calque selectionné')
 			return
 		}
 		if(action.layer.locked || !action.layer.visible) {
-			alert('le calque est verrouillé ou masqué')
+			ModalBox.alert('le calque est verrouillé ou masqué')
 			return
 		}
 

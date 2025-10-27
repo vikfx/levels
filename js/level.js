@@ -1,6 +1,7 @@
 import { Layer } from './layer.js'
 import { World } from './world.js'
 import { Grid } from './grid.js'
+import { ModalBox } from './modalbox.js'
 
 export class Level {
 	name										//nom du level
@@ -76,10 +77,10 @@ export class Level {
 		const $delete = document.createElement('button')
 		$delete.dataset.action = 'delete'
 		$delete.innerHTML = 'delete'
-		$delete.addEventListener('click', evt => {
+		$delete.addEventListener('click', async evt => {
 			evt.preventDefault()
 
-			const ok = confirm('vous êtes sur le point de supprimer ce level. Êtes-vous sûr?')
+			const ok = await ModalBox.confirm('vous êtes sur le point de supprimer ce level. Êtes-vous sûr?')
 			if(ok) World.getInstance().removeLevel(this)
 		})
 		

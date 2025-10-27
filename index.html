@@ -24,7 +24,7 @@
 			<input type="text" name="project-name" value="" placeholder="nom du projet">
 			<span id="loader">loading</span>
 			<div class="modal">
-				<div class="modal-content">
+				<div class="modal-box">
 					<input type="file" name="project-json">
 				</div>
 			</div>
@@ -264,7 +264,7 @@
 		</main>
 
 		<div  id="welcome" class="modal">
-			<div class="modal-content">
+			<div class="modal-box">
 				<h2>Bienvenue, par où voulez-vous commencer ?</h2>
 				<form class="project">
 					<input type="submit" formaction="/api/project/" formmethod="GET" value="ouvrir un projet" class="button"></button>
@@ -275,6 +275,26 @@
 				</form>
 			</div>
 		</div>
+
+		<div id="alert" class="modal">
+			<div class="modal-box">
+				<div class="content"></div>
+				<div class="buttons-wrap">
+					<button class="close button">OK</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="confirm" class="modal">
+			<div class="modal-box">
+				<div class="content"></div>
+				<div class="buttons-wrap">
+					<button class="ok button">OK</button>
+					<button class="close button">Annuler</button>
+				</div>
+			</div>
+		</div>
+
 	</div> <!-- /#page -->
 
 	<!-- scripts -->

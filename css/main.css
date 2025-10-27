@@ -31,6 +31,11 @@
 * {
 	font-family: inherit;
 	color: inherit;
+
+	/*blocage appui long mobile*/
+	-webkit-touch-callout: none;
+  	-webkit-user-select: none;
+  	user-select: none;
 }
 
 body {
@@ -121,7 +126,7 @@ MODAL
 	display: none;
 }
 
-.modal-content {
+.modal-box {
 	display: flex;
 	justify-content: center;
 	align-items: stretch;
@@ -130,8 +135,21 @@ MODAL
 	background-color: var(--color-accent5);
 }
 
-.modal form {
-	border: none;
+.modal-box .content {
+	text-align: center;
+}
+
+.modal-box .buttons-wrap {
+    display: flex;
+    gap: var(--space-m);
+    justify-content: center;
+    align-items: center;
+    margin-top: var(
+    --space-l);
+}
+
+.modal-box .buttons-wrap > .button {
+    width: 100%;
 }
 
 /*****

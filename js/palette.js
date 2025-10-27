@@ -2,6 +2,7 @@ import { Settings } from './settings.js'
 import { Model } from './model.js'
 import { FetchAPI } from './fetchAPI.js'
 import { Datas } from './datas.js'
+import { ModalBox } from './modalbox.js'
 
 export class Palette {
 	name								//nicename de la palette
@@ -53,7 +54,11 @@ export class Palette {
 		
 		let longclick = false
 		let timer
-		$a.addEventListener('click', (evt) => {evt.preventDefault()})
+		//blocage des comportement par defaut
+		$a.addEventListener('click', evt => evt.preventDefault())
+		$a.addEventListener('contextmenu', evt => evt.preventDefault())
+		$a.addEventListener('touchstart', evt => evt.preventDefault())
+
 		
 		$a.addEventListener('pointerdown', (evt) => {
 			evt.preventDefault()
@@ -63,7 +68,7 @@ export class Palette {
 			timer = setTimeout(() => { longclick = true }, 800)
 		})
 		
-		$a.addEventListener('pointerup', (evt) => {
+		$a.addEventListener('pointerup', async (evt) => {
 			evt.preventDefault()
 			
 			//rendre actif
@@ -72,7 +77,7 @@ export class Palette {
 			//supprimer le bouton
 			if(timer) clearTimeout(timer)
 			if(longclick) {
-				const ok = confirm('Voulez-vous supprimer cette palette ?')
+				const ok = await ModalBox.confirm('Voulez-vous supprimer cette palette ?')
 				if(ok) {
 					const pname = localStorage.getItem('projectName')
 					const url = FetchAPI.apiURL + 'project/' + pname + '/palette/' + this.slug

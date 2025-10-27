@@ -1,6 +1,7 @@
 import { Settings } from './settings.js'
 import { World } from './world.js'
 import { Grid } from './grid.js'
+import { ModalBox } from './modalbox.js'
 import { FetchAPI } from './fetchAPI.js'
 
 // const settings = new Settings();
@@ -75,24 +76,8 @@ function authenticate() {
 		const apiKey = $api.value
 
 		if(apiKey) {
-			// fetch('api/authenticate', {
-			// 	method: 'GET',
-			// 	headers: { 'X-API-KEY': apiKey},
-			// 	credentials: 'same-origin' // pour accepter le cookie
-			// })
-			// .then(res => res.json())
-			// .then((output) => {
-			// 	if(output['response']) {
-			// 		localStorage.setItem('apiKey', apiKey)
-			// 		alert(output['response'])
-			// 		console.log(output['response'])
-
-			// 		if($form.dataset.redirect)
-			// 			location.href = $form.dataset.redirect
-			// 	}
-			// });
 			FetchAPI.fetchAuth(apiKey, (output) => {
-				alert(output['response'])
+				ModalBox.alert(output['response'])
 				console.log(output['response'])
 
 				if($form.dataset.redirect)
@@ -123,7 +108,7 @@ function projectRequest() {
 		//nom du dernier projet
 		if(localStorage.getItem('projectName')) $pname.value = localStorage.getItem('projectName')
 
-		$form.addEventListener('submit', (evt) => {
+		$form.addEventListener('submit', async (evt) => {
 			evt.preventDefault()
 			
 			if($pname.value == "") return
@@ -140,12 +125,12 @@ function projectRequest() {
 
 				//recuperer le projet
 				case "projectGET" :
-					if(confirm(msg[action])) loadJSON($pname.value)
+					if(await ModalBox.confirm(msg[action])) loadJSON($pname.value)
 					break
 
 				//sauver le projet
 				case "projectSAVE" : 
-					if(confirm(msg[action])) saveJSON($pname.value)
+					if(await ModalBox.confirm(msg[action])) saveJSON($pname.value)
 					break
 
 				default :

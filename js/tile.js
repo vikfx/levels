@@ -1,4 +1,5 @@
 import { Datas } from './datas.js'
+import { ModalBox } from './modalbox.js'
 import { Model } from './model.js'
 
 
@@ -66,10 +67,10 @@ export class Tile {
 		const $delete = document.createElement('button')
 		$delete.dataset.action = 'delete'
 		$delete.innerHTML = 'delete'
-		$delete.addEventListener('click', evt => {
+		$delete.addEventListener('click', async evt => {
 			console.log('todo delete tile')
 
-			const ok = confirm('vous êtes sur le point de supprimer cette tile. Êtes-vous sûr?')
+			const ok = await ModalBox.confirm('vous êtes sur le point de supprimer cette tile. Êtes-vous sûr?')
 			if(ok) this.layer.removeTile(this)
 		})
 
