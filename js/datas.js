@@ -133,9 +133,18 @@ export class Datas {
 
 		//path
 		$c = Datas.$containers.path
+		$c.color.value = (this.path && this.path.color) ? this.path.color : Grid.styles.path.color
+		$c.color.addEventListener('change', evt => {
+			this.path.color = evt.target.value
+			if(this.path.points.length > 0) {
+				this.tile.layer.addPath(this.tile, this.path)
+				Grid.getInstance().draw()
+			}
+		})
+
 		$c.ul.innerHTML = ''
-		if(this.path) {
-			this.path.forEach(point => {
+		if(this.path && this.path.points) {
+			this.path.points.forEach(point => {
 				this.addPoint(point.x, point.y)
 				Grid.getInstance().draw()
 			});
@@ -152,12 +161,13 @@ export class Datas {
 		$c.new.y.value = ''
 		$c.new.form.addEventListener('submit', evt => {
 			evt.preventDefault()
-			if(!this.path) this.path = []
+			if(!this.path) this.path = {color : Grid.styles.path.color, points : []}
+			if(!this.path.points) this.path.points = []
 			
 			const x = Datas.$containers.path.new.x.value
 			const y = Datas.$containers.path.new.y.value
 			if(x === '' || y === '') return
-			this.path.push({x, y})
+			this.path.points.push({x, y})
 			this.addPoint(x, y)
 			this.tile.layer.addPath(this.tile, this.path)
 			Grid.getInstance().draw()
@@ -210,8 +220,8 @@ export class Datas {
 		$ix.placeholder = 'x'
 		$ix.value = x
 		$ix.addEventListener('change', evt => {
-			const i = this.path.findIndex(p => (p.x == x && p.y == y))
-			if(i >= 0) this.path[i].x = $ix.value
+			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
+			if(i >= 0) this.path.points[i].x = $ix.value
 			x = $ix.value
 			this.tile.layer.addPath(this.tile, this.path)
 			Grid.getInstance().draw()
@@ -222,8 +232,8 @@ export class Datas {
 		$iy.placeholder = 'y'
 		$iy.value = y
 		$iy.addEventListener('change', evt => {
-			const i = this.path.findIndex(p => (p.x == x && p.y == y))
-			if(i >= 0) this.path[i].y = $iy.value
+			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
+			if(i >= 0) this.path.points[i].y = $iy.value
 			y = $iy.value
 			this.tile.layer.addPath(this.tile, this.path)
 			Grid.getInstance().draw()
@@ -233,9 +243,9 @@ export class Datas {
 		$del.dataset.action = 'delete'
 		$del.innerHTML = 'supprimer'
 		$del.addEventListener('click', evt => {
-			const i = this.path.findIndex(p => (p.x == x && p.y == y))
+			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
 			if(i >= 0) {
-				this.path.splice(i, 1)
+				this.path.points.splice(i, 1)
 				$ul.removeChild($li)
 				this.tile.layer.addPath(this.tile, this.path)
 				Grid.getInstance().draw()
@@ -328,6 +338,7 @@ export class Datas {
 
 		//path
 		$c = Datas.$containers.path
+		$c.color.value = ''
 		$c.ul.innerHTML = ''
 		$c.new.x.value = ''
 		$c.new.y.value = ''
@@ -346,7 +357,7 @@ export class Datas {
 		//contruire le tableau des datas
 		const json = {}
 
-		if(this.path && this.path.length > 0) json.path = this.path
+		if(this.path && (this.path.points.length > 0 || this.path.color)) json.path = this.path
 		if(this.relation) json.relation = this._relation
 
 		Object.entries(this.datas).forEach(([k, v]) => {
@@ -374,7 +385,6 @@ export class Datas {
 					
 				case 'path' :
 					this.path = v
-					//if(v && v.length > 0) datas[k] = v.map(p => p.x + ',' + p.y) 
 					break
 
 				case 'name' :
@@ -444,9 +454,10 @@ export class Datas {
 		const $path = document.querySelector('#tile-path')
 		if(!$path) throw new Error('pas de container pour le chemin de la tile')
 		const $pul = $path.querySelector(':scope > ul')
+		const $pcolor = $path.querySelector(':scope > input[name=color]')
 		const $pdelete = $path.querySelector(':scope > button[data-action=delete]')
 		const $pform = $path.querySelector('#new-point')
-		if(!$pul || !$pform || !$pdelete) throw new Error('le containers #tile-path ne contient pas les elements adequats')
+		if(!$pul || !$pcolor || !$pform || !$pdelete) throw new Error('le containers #tile-path ne contient pas les elements adequats')
 		const $pfx = $pform.querySelector('input[name=x]')
 		const $pfy = $pform.querySelector('input[name=y]')
 		if(!$pfx || !$pfy) throw new Error('le containers #new-point ne contient pas les elements adequats')
@@ -486,6 +497,7 @@ export class Datas {
 			path 		: {
 				container	: $path,
 				ul			: $pul,
+				color		: $pcolor,
 				delete		: $pdelete,
 				new			: {
 					form			: $pform,
