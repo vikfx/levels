@@ -182,12 +182,19 @@ SIDEBAR
 	min-height: 2.2em;
 }
 
-#coordonnees {
+#coordonnees, #size {
 	padding: var(--space-m) var(--space-l);
 	display: flex;
-	gap: 10px;
-	font-size: 30px;
+	gap: var(--space-m);
 	justify-content: flex-end;
+}
+#coordonnees {
+	padding-bottom: 0;
+	font-size: 30px;
+}
+#size {
+	padding-top: 0;
+	font-size: 15px;
 }
 
 #sidebar > header > nav {

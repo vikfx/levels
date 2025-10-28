@@ -306,7 +306,9 @@ export class World {
 		//coordonnées
 		const $tx = document.querySelector('#tile-x')
 		const $ty = document.querySelector('#tile-y')
-		if(!$tx || !$ty) throw new Error('pas de container pour afficher les coordonnées')
+		const $tw = document.querySelector('#tile-w')
+		const $th = document.querySelector('#tile-h')
+		if(!$tx || !$ty || !$tw || !$th) throw new Error('pas de container pour afficher les coordonnées')
 		
 		//formulaire level
 		const $flevel = document.querySelector('#add-level')
@@ -333,7 +335,9 @@ export class World {
 			},
 			coords 		: {
 				x 			: $tx,
-				y 			: $ty
+				y 			: $ty,
+				w 			: $tw,
+				h 			: $th,
 			},
 			forms 		: {
 				level 		: $flevel,

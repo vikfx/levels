@@ -526,12 +526,14 @@ export class Grid {
 
 	//definir la position courante
 	setCurrentPos(pos) {
-		//this.cursor.pos = pos
 		this.cursor.start = pos
+		const size = this.parseSelection() || {w : 1, h: 1} 
 
 		if(pos) {
 			World.$containers.coords.x.innerHTML = 'x ' + pos.x.toString().padStart(4, "0")
 			World.$containers.coords.y.innerHTML = 'y ' + pos.y.toString().padStart(4, "0")
+			World.$containers.coords.w.innerHTML = 'w ' + size.w.toString().padStart(4, "0")
+			World.$containers.coords.h.innerHTML = 'h ' + size.h.toString().padStart(4, "0")
 		}
 	}
 
@@ -546,12 +548,7 @@ export class Grid {
 		const w = Math.abs(s.x - e.x) + 1
 		const h = Math.abs(s.y - e.y) + 1
 
-		return {
-			x,
-			y,
-			w,
-			h
-		}
+		return { x, y, w, h }
 	}
 
 	//tableau des tiles depuis une selection
