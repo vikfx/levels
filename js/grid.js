@@ -31,7 +31,8 @@ export class Grid {
 	reset() {
 		console.log('reset')
 		this.offset = (this.level) ? this.level.clampPos(0, 0) : {x: 0, y: 0}
-		this.cursor = {start : false, end : false, select : false}
+		//this.cursor = {start : false, end : false, select : false}
+		this.cursor = {start : false, end : false}
 		this.selection = {current: false, tiles: [], positions : false}
 		this.setZoom(10)
 		this.clipboard = []
@@ -240,7 +241,6 @@ export class Grid {
 			if(!this.level || this.multiTouch) return
 
 			if ((evt.button === 0 && evt.pointerType !== "touch") || (evt.pointerType === "touch" && evt.isPrimary)) {
-				this.cursor.select = true
 				this.cursor.end = this.pixelToGrid(evt.offsetX, evt.offsetY)
 			}
 		})
@@ -249,7 +249,7 @@ export class Grid {
 		$canvas.addEventListener('pointerup', evt => {
 			if(!this.level || this.multiTouch) return
 
-			if(this.cursor.select) {
+			if(this.cursor.end) {
 				const selection = this.parseSelection()
 
 				let action = {
@@ -259,7 +259,8 @@ export class Grid {
 				}
 
 				const tiles = this.paintAction(selection, action)
-				this.cursor.select = false
+				this.cursor.end = false
+				
 				this.draw()
 				
 				if(tiles.removed.length > 0 || tiles.added.length > 0) {
@@ -284,7 +285,6 @@ export class Grid {
 		$canvas.addEventListener('pointerleave', (evt) => {
 			this.cursor.start = false
 			this.cursor.end = false
-			this.cursor.select = false
 			this.draw()
 		})
 
@@ -531,7 +531,7 @@ export class Grid {
 	//definir la position courante
 	setCurrentPos(pos) {
 		this.cursor.start = pos
-		const size = this.parseSelection() || {w : 1, h: 1} 
+		const size = this.parseSelection()
 
 		if(pos) {
 			World.$containers.coords.x.innerHTML = 'x ' + pos.x.toString().padStart(4, "0")
@@ -543,7 +543,6 @@ export class Grid {
 
 	//parser la selection
 	parseSelection() {
-		if(!this.cursor.select) return
 		const s = this.cursor.start
 		const e = (this.cursor.end) ? this.cursor.end : this.cursor.start
 		const x = (s.x > e.x) ? e.x : s.x
@@ -593,6 +592,8 @@ export class Grid {
 		if(z <= this.zoomMin) z = this.zoomMin
 		if(z >= this.zoomMax) z = this.zoomMax
 		this.zoom = z
+
+		World.$containers.coords.z.innerHTML = 'zoom ' + z.toString().padStart(4, "0")
 	}
 
 	//convertir des coordonnées x/y dans le monde en position dans la grille
@@ -686,10 +687,10 @@ export class Grid {
 		const ctx = Grid.ctx
 		const z = this.zoom
 
-		if(this.cursor.select) {
-			const s = this.parseSelection()
-			const origin = this.gridToPixel(s.x, s.y, z)
-
+		const s = this.parseSelection()
+		const origin = this.gridToPixel(s.x, s.y, z)
+		let pos
+		if(this.cursor.end) {
 			ctx.fillStyle = Grid.styles.cursor.multiple.color
 			ctx.fillRect(origin.x, origin.y, s.w * z, s.h * z)
 		} else if(this.cursor.start) {
@@ -698,6 +699,12 @@ export class Grid {
 			const pos = this.gridToPixel(this.cursor.start.x, this.cursor.start.y, z)
 			ctx.strokeRect(pos.x, pos.y, z, z)
 		}
+
+		//ecrire le text
+		ctx.fillStyle = Grid.styles.cursor.current.color
+		ctx.font = Grid.styles.cursor.current.text
+		let txt = this.cursor.start.x + ', ' + this.cursor.start.y + ' (' + s.w + ', ' + s.h + ')'
+		ctx.fillText(txt, origin.x, origin.y - z)
 	}
 
 	//dessiner la premiere tile selectionnée
@@ -719,6 +726,15 @@ export class Grid {
 			if(t != sel.current) ctx.fillRect(pos.x, pos.y, z, z)
 			else ctx.strokeRect(pos.x, pos.y, z, z)
 		})
+
+		//ecrire le text
+		if(sel.selection) {
+			ctx.fillStyle = Grid.styles.selected.current.color
+			ctx.font = Grid.styles.selected.current.text
+			let txt = sel.selection.x + ', ' + sel.selection.y + ' (' + sel.selection.w + ', ' + sel.selection.h + ')'
+			const pos = this.gridToPixel(sel.selection.x, sel.selection.y, z)
+			ctx.fillText(txt, pos.x, pos.y - z)
+		}
 	}
 
 	//dessiner une relation
@@ -816,17 +832,18 @@ export class Grid {
 			cursor 		: {
 				current		: {
 					color 		: '#DD0066',
-					width 		: 3
+					width 		: 3,
+					text 		: '16px content'
 				},
 				multiple	: {
 					color 		: '#DD006655',
 				}
-				
 			},
 			selected 	: {
 				current		: {
 					color 		: '#22DD00',
-					width 		: 3
+					width 		: 3,
+					text 		: '16px content'
 				},
 				multiple	: {
 					color 		: '#22DD0055',
