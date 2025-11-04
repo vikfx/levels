@@ -58,9 +58,21 @@ export class Layer {
 		//nom
 		const $input = document.createElement('input')
 		$input.type = 'text'
+		$input.readOnly = true
 		$input.value = this.name
 		$input.addEventListener('click', evt => {
 			this.setActive()
+		})
+		$input.addEventListener('dblclick', evt => {
+			$input.readOnly = false
+		})
+		$input.addEventListener('focusout', evt => {
+			$input.readOnly = true
+		})
+		$input.addEventListener('change', evt => {
+			this.name = $input.value
+			$input.readOnly = true
+			this.level.edited = true
 		})
 
 		//bouton visibilité

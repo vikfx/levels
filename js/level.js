@@ -61,6 +61,7 @@ export class Level {
 		$input.value = this.name
 		$input.addEventListener('change', evt => {
 			this.name = $input.value
+			this.edited = true
 			World.getInstance().draw()
 		})
 		
