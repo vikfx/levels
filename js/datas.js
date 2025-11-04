@@ -88,7 +88,7 @@ export class Datas {
 		})
 
 		$c.delete.addEventListener('click', evt => {
-			this.tile.layer.removeDatas(this.tile)
+			this.tile.layer.removeTile(this.tile)
 			Grid.getInstance().draw()
 		})
 
@@ -107,7 +107,7 @@ export class Datas {
 				if(t) {
 					data.setRelation(t)
 					data.tile.layer.addRelation(data.tile, t)
-					Datas.$containers.relation.name.innerHTML = tile.name
+					Datas.$containers.relation.name.innerHTML = t.name
 				}
 
 				$canvas.removeEventListener('paint', selectRelation, {capture : true})
