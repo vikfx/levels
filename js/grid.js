@@ -176,7 +176,9 @@ export class Grid {
 							if(res.added.length > 0) {
 								const clone = res.added[0]
 
-								if(tile.datas._name != '')
+								console.log('clone ' + tile.name)
+								console.log(tile.datas._name)
+								if(tile.datas._name && tile.datas._name != '')
 									clone.name = tile.datas.name + ' (copy)'
 
 								//cloner le path
