@@ -829,10 +829,10 @@ export class Grid {
 	//dessiner un path
 	drawPath(path) {
 		const ctx = Grid.ctx
-		const bo = this.bounds
+		//const bo = this.bounds
 		const z = this.zoom
 
-		if(!Grid.inBounds(path.tile, bo)) return
+		//if(!Grid.inBounds(path.tile, bo)) return
 		
 		ctx.strokeStyle = path.path.color || Grid.styles.path.color
 		ctx.lineWidth = Grid.styles.path.width * (z / this.zoomMax)
