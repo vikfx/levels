@@ -2,6 +2,7 @@ import { World } from './world.js'
 import { Grid } from './grid.js'
 import { ModalBox } from './modalbox.js'
 import { Relation } from './relation.js'
+import { Path } from './path.js'
 
 export class Datas {
 	tile				//tile rattaché aux datas
@@ -96,7 +97,7 @@ export class Datas {
 		//relations
 		$c = Datas.$containers.relation
 		$c.ul.innerHTML = ''
-		this.related.forEach(t => this.addRelation(t))
+		this.related.forEach(t => this.addRelationHTML(t))
 		$c.add.addEventListener('click', evt => {
 			const $canvas = Grid.$containers.canvas
 			$canvas.removeEventListener('paint', selectRelation, {capture : true})
@@ -109,7 +110,7 @@ export class Datas {
 				const t = (e.detail.result.tiles.selected.length > 0) ? e.detail.result.tiles.selected[0] : null
 				if(t) {
 					const rel = data.tile.layer.addRelation(data.tile, t)
-					if(rel) data.addRelation(t)
+					if(rel) data.addRelationHTML(t)
 				}
 	
 				$canvas.removeEventListener('paint', selectRelation, {capture : true})
@@ -123,7 +124,7 @@ export class Datas {
 		$c.color.addEventListener('change', evt => {
 			this.path.color = evt.target.value
 			if(this.path.points.length > 0) {
-				this.tile.layer.addPath(this.tile, this.path)
+				this.tile.layer.addPath(this.path)
 				Grid.getInstance().draw()
 			}
 		})
@@ -131,8 +132,7 @@ export class Datas {
 		$c.ul.innerHTML = ''
 		if(this.path && this.path.points) {
 			this.path.points.forEach(point => {
-				this.addPoint(point.x, point.y)
-				Grid.getInstance().draw()
+				this.addPointHTML(point)
 			});
 		}
 
@@ -142,20 +142,31 @@ export class Datas {
 			Datas.$containers.path.ul.innerHTML = ''
 			Grid.getInstance().draw()
 		})
+		
+		$c.rotate.addEventListener('click', evt => {
+			if(!this.path || !this.path.points || this.path.length < 1) return
+				
+			this.path.rotate()
+			Datas.$containers.path.ul.innerHTML = ''
+			this.path.points.forEach(point => {
+				this.addPointHTML(point)
+			});
+			Grid.getInstance().draw()
+		})
 
 		$c.new.x.value = ''
 		$c.new.y.value = ''
 		$c.new.form.addEventListener('submit', evt => {
 			evt.preventDefault()
-			if(!this.path) this.path = {color : Grid.styles.path.color, points : []}
+			if(!this.path) this.path = new Path(this.tile, [], Grid.styles.path.color)
 			if(!this.path.points) this.path.points = []
 			
-			const x = Datas.$containers.path.new.x.value
-			const y = Datas.$containers.path.new.y.value
+			const x = Number(Datas.$containers.path.new.x.value)
+			const y = Number(Datas.$containers.path.new.y.value)
 			if(x === '' || y === '') return
-			this.path.points.push({x, y})
-			this.addPoint(x, y)
-			this.tile.layer.addPath(this.tile, this.path)
+			const point = this.path.addPoint(x, y)
+			this.addPointHTML(point)
+			this.tile.layer.addPath(this.path)
 			Grid.getInstance().draw()
 		})
 
@@ -169,7 +180,7 @@ export class Datas {
 					break
 
 				default : 
-					this.addData(k, v)
+					this.addDataHTML(k, v)
 					break
 			}
 		})
@@ -186,7 +197,7 @@ export class Datas {
 				return
 			}
 			this.datas[k] = v
-			this.addData(k, v)
+			this.addDataHTML(k, v)
 		})
 	}
 
@@ -228,7 +239,7 @@ export class Datas {
 	}
 
 	//ajouter une relation
-	addRelation(tile) {
+	addRelationHTML(tile) {
 		const $ul = Datas.$containers.relation.ul
 
 		const $li = document.createElement('li')
@@ -276,7 +287,7 @@ export class Datas {
 	}
 	
 	//ajouter un point
-	addPoint(x, y) {
+	addPointHTML(point) {
 		const $ul = Datas.$containers.path.ul
 
 		const $li = document.createElement('li')
@@ -288,24 +299,18 @@ export class Datas {
 		$ix.type ='number'
 		$ix.name = 'x'
 		$ix.placeholder = 'x'
-		$ix.value = x
+		$ix.value = point.x
 		$ix.addEventListener('change', evt => {
-			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
-			if(i >= 0) this.path.points[i].x = $ix.value
-			x = $ix.value
-			this.tile.layer.addPath(this.tile, this.path)
+			point.x = Number($ix.value)
 			Grid.getInstance().draw()
 		})
 		
 		$iy.type ='number'
 		$iy.name = 'y'
 		$iy.placeholder = 'y'
-		$iy.value = y
+		$iy.value = point.y
 		$iy.addEventListener('change', evt => {
-			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
-			if(i >= 0) this.path.points[i].y = $iy.value
-			y = $iy.value
-			this.tile.layer.addPath(this.tile, this.path)
+			point.y = Number($iy.value)
 			Grid.getInstance().draw()
 		})
 
@@ -313,11 +318,10 @@ export class Datas {
 		$del.dataset.action = 'delete'
 		$del.innerHTML = 'supprimer'
 		$del.addEventListener('click', evt => {
-			const i = this.path.points.findIndex(p => (p.x == x && p.y == y))
+			const i = this.path.removePoint(point)
 			if(i >= 0) {
-				this.path.points.splice(i, 1)
 				$ul.removeChild($li)
-				this.tile.layer.addPath(this.tile, this.path)
+				if(this.path.points.length < 1) this.tile.layer.removePath(this.tile)
 				Grid.getInstance().draw()
 			}
 		})
@@ -329,7 +333,7 @@ export class Datas {
 	}
 	
 	//ajouter une data
-	addData(k, v) {
+	addDataHTML(k, v) {
 		const $ul = Datas.$containers.datas.ul
 
 		const $li = document.createElement('li')
@@ -377,12 +381,12 @@ export class Datas {
 		const json = {}
 
 		//path
-		if(this.path && (this.path.points.length > 0 || this.path.color)) json.path = this.path
+		if(this.path && (this.path.points.length > 0 || this.path.color)) json.path = this.path.toJSON()
 
 		//relation
 		if(this.relations.length > 0) json.relations = this.relations.map(r => r.otherCoords(this.tile))
 
-
+		//datas
 		Object.entries(this.datas).forEach(([k, v]) => {
 			switch(k) {
 				default :
@@ -415,7 +419,7 @@ export class Datas {
 					break
 					
 				case 'path' :
-					this.path = v
+					this.path = new Path(this.tile, v.points, v.color)
 					break
 
 				case 'name' :
@@ -461,7 +465,6 @@ export class Datas {
 		const $bnext = $selection.querySelector('button[data-action=next]')
 		if(!$qty || !$bnext || !$bprev) throw new Error('le containers #tile-selection ne contient pas les elements adequats')
 
-
 		//infos
 		const $infos = document.querySelector('#tile-infos')
 		if(!$infos) throw new Error('pas de container pour les infos de la tile')
@@ -484,9 +487,10 @@ export class Datas {
 		if(!$path) throw new Error('pas de container pour le chemin de la tile')
 		const $pul = $path.querySelector(':scope > ul')
 		const $pcolor = $path.querySelector(':scope > input[name=color]')
+		const $prot = $path.querySelector(':scope > button[data-action=rotate]')
 		const $pdelete = $path.querySelector(':scope > button[data-action=delete]')
 		const $pform = $path.querySelector('#new-point')
-		if(!$pul || !$pcolor || !$pform || !$pdelete) throw new Error('le containers #tile-path ne contient pas les elements adequats')
+		if(!$pul || !$pcolor || !$pform || !$pdelete || !$prot) throw new Error('le containers #tile-path ne contient pas les elements adequats')
 		const $pfx = $pform.querySelector('input[name=x]')
 		const $pfy = $pform.querySelector('input[name=y]')
 		if(!$pfx || !$pfy) throw new Error('le containers #new-point ne contient pas les elements adequats')
@@ -526,6 +530,7 @@ export class Datas {
 				ul			: $pul,
 				color		: $pcolor,
 				delete		: $pdelete,
+				rotate		: $prot,
 				new			: {
 					form			: $pform,
 					x				: $pfx,

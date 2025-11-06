@@ -190,13 +190,7 @@ export class Layer {
 		this.chunks.push(tile)
 
 		//path
-		if(tile.datas.path) this.addPath(tile, tile.datas.path)
-
-		//relations
-		// if(tile.datas.relation) {
-		// 	tile.datas.relation.datas.relation = tile
-		// 	this.addRelation(tile, tile.datas.relation)
-		// }
+		if(tile.datas.path) this.addPath(tile.datas.path)
 
 		return tile
 	}
@@ -252,13 +246,13 @@ export class Layer {
 	}
 
 	//ajouter un path
-	addPath(tile, path) {
+	addPath(path) {
 		if(!this.pathes) this.pathes = []
 
 		//supprimer l'ancien
-		this.removePath(tile)
+		this.removePath(path.tile)
 
-		this.pathes.push({tile, path})
+		this.pathes.push(path)
 	}
 	
 	//supprimer un path

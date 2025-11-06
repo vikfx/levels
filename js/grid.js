@@ -5,6 +5,7 @@ import { Datas } from './datas.js'
 import { Tile } from './tile.js'
 import { ModalBox } from './modalbox.js'
 import { Relation } from './relation.js'
+import { Path } from './path.js'
 
 export class Grid {
 	static instance			//instance du singleton
@@ -217,15 +218,8 @@ export class Grid {
 
 								//cloner le path
 								if(tile.datas.path) {
-									clone.datas.path = {}
-									clone.datas.path.color = tile.datas.path.color || Grid.styles.path.color
-									clone.datas.path.points = []
-									if(tile.datas.path.points) {
-										tile.datas.path.points.forEach(p => {
-											clone.datas.path.points.push({x: Number(p.x) + dx, y: Number(p.y) + dy})
-										})
-									}
-									clone.layer.addPath(clone, clone.datas.path)
+									clone.datas.path = new Path(clone, tile.datas.path.points, tile.datas.path.color)
+									clone.layer.addPath(clone.datas.path)
 								}
 								
 								//cloner les relations
@@ -827,32 +821,29 @@ export class Grid {
 	//dessiner un path
 	drawPath(path) {
 		const ctx = Grid.ctx
-		//const bo = this.bounds
 		const z = this.zoom
 
-		//if(!Grid.inBounds(path.tile, bo)) return
-		
-		ctx.strokeStyle = path.path.color || Grid.styles.path.color
+		//delta
+		const dx = path.tile.x + .5
+		const dy = path.tile.y + .5
+
+		ctx.strokeStyle = path.color || Grid.styles.path.color
 		ctx.lineWidth = Grid.styles.path.width * (z / this.zoomMax)
 		ctx.beginPath()
-		path.path.points.forEach((point, i) => {
-			const pos = this.gridToPixel(point.x, point.y, z)
-			pos.x += z/2
-			pos.y += z/2
+		path.points.forEach((point, i) => {
+			const pos = this.gridToPixel(point.x + dx, point.y + dy, z)
 			if(i == 0) ctx.moveTo(pos.x, pos.y)
 			else ctx.lineTo(pos.x, pos.y)
 		})
 		ctx.stroke()
 
-		let p = path.path.points[0]
-		const a = this.gridToPixel(p.x, p.y, z)
-		p = path.path.points[path.path.points.length - 1]
-		const b = this.gridToPixel(p.x, p.y, z)
-		a.x += z/2
-		a.y += z/2
-		b.x += z/2
-		b.y += z/2
-		ctx.fillStyle = path.path.color || Grid.styles.path.color
+		//extremités
+		if(path.points.length < 1) return
+		let p = path.points[0]
+		const a = this.gridToPixel(p.x + dx, p.y + dy, z)
+		p = path.points[path.points.length - 1]
+		const b = this.gridToPixel(p.x + dx, p.y + dy, z)
+		ctx.fillStyle = path.color || Grid.styles.path.color
 		const s = z * Grid.styles.path.square		//demi largeur du carre d'extremité
 
 		ctx.beginPath();
