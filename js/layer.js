@@ -3,6 +3,7 @@ import { World } from './world.js'
 import { Grid } from './grid.js'
 import { Chunks } from './chunks.js'
 import { ModalBox } from './modalbox.js'
+import { Relation } from './relation.js'
 
 export class Layer {
 	slug				//le slug du layer
@@ -13,8 +14,8 @@ export class Layer {
 	visible				//le calque est visible ou non
 	locked				//le calque est verrouillé ou non
 	level				//le level parent
-	relations
-	pathes
+	relations			//liste des relations
+	pathes				//liste des path
 	
 	constructor(slug, name, tiles = [], level) {
 		if(!slug) throw new Error('slug invalide')
@@ -188,12 +189,15 @@ export class Layer {
 
 		this.chunks.push(tile)
 
-		//path et relation
+		//path
 		if(tile.datas.path) this.addPath(tile, tile.datas.path)
-		if(tile.datas.relation) {
-			tile.datas.relation.datas.relation = tile
-			this.addRelation(tile, tile.datas.relation)
-		}
+
+		//relations
+		// if(tile.datas.relation) {
+		// 	tile.datas.relation.datas.relation = tile
+		// 	this.addRelation(tile, tile.datas.relation)
+		// }
+
 		return tile
 	}
 
@@ -202,8 +206,6 @@ export class Layer {
 		const i = this.chunks.pop(tile)
 		if(i >= 0) tile.clear()
 		this.removePath(tile)
-
-		if(tile.datas.relation) tile.datas.relation.datas.relation = null
 		this.removeRelation(tile)
 	}
 
@@ -222,29 +224,31 @@ export class Layer {
 	//ajouter une relation dans le tableau
 	addRelation(tileA, tileB) {
 		if(!this.relations) this.relations = []
-		if(!tileA || !tileB) return
-		if(this.getRelation(tileA) || this.getRelation(tileB)) {
-			this.removeRelation(tileA)
-			this.removeRelation(tileB)
-		}
+		if(!(tileA instanceof Tile)|| !(tileB instanceof Tile)) return
 
-		this.relations.push([tileA, tileB])
+		let relation = Relation.findRelation(this.relations, tileA, tileB)
+		if(relation) return
+		relation =  new Relation(tileA, tileB)
+		this.relations.push(relation)
+
+		return relation
 	}
 
 	//supprimer une relation dans le tableau
-	removeRelation(tile) {
-		if(!tile) return
-		const relation = this.getRelation(tile)
-		if(!relation) return
-		const i = this.relations.indexOf(relation)
-		if(i < 0) return
+	removeRelation(tileA, tileB = false) {
+		if(!(tileA instanceof Tile)) return
 
-		this.relations.splice(i, 1)
-	}
-	
-	//trouver une relation
-	getRelation(tile) {
-		return this.relations.find(r => r.includes(tile))
+		if(tileB === false) {
+			const tiles = tileA.datas.related
+			tiles.forEach(t => {
+				let i = Relation.findRelationIndex(this.relations, tileA, t)
+				if(i >= 0) this.relations.splice(i, 1)
+			})
+		} else {
+			if(!tileB instanceof Tile) return
+			let i = Relation.findRelationIndex(this.relations, tileA, tileB)
+			if(i >= 0) this.relations.splice(i, 1)
+		}
 	}
 
 	//ajouter un path

@@ -1,7 +1,7 @@
 export class History {
 	actions
 	current
-	maxHistory = 20
+	maxHistory = 100
 
 	constructor() {
 		this.reset()
@@ -15,6 +15,9 @@ export class History {
 
 	//ajouter une action dans l'historique
 	push(action) {
+		console.log('push history')
+		console.log(action)
+
 		this.actions = this.actions.slice(0, this.current + 1)
 		this.actions.push(action)
 		if(this.actions.length > this.maxHistory) 

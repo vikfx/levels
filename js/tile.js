@@ -12,10 +12,10 @@ export class Tile {
 	layer			//le layer parent de la tile
 	//_name			//nom de la tile
 
-	constructor(x, y, model, layer, datas = {}) {
+	constructor(x, y, ref, layer, datas = {}) {
 		this.x = x
 		this.y = y
-		this.ref = model
+		this.ref = ref
 		this.layer = layer
 
 		this.datas = new Datas(datas, this)

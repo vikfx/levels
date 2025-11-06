@@ -4,6 +4,7 @@ import { History } from './history.js'
 import { Datas } from './datas.js'
 import { Tile } from './tile.js'
 import { ModalBox } from './modalbox.js'
+import { Relation } from './relation.js'
 
 export class Grid {
 	static instance			//instance du singleton
@@ -31,9 +32,8 @@ export class Grid {
 	reset() {
 		console.log('reset')
 		this.offset = (this.level) ? this.level.clampPos(0, 0) : {x: 0, y: 0}
-		//this.cursor = {start : false, end : false, select : false}
 		this.cursor = {start : false, end : false}
-		this.selection = {current: false, tiles: [], positions : false}
+		this.selection = {current: false, tiles: [], selection : false}
 		this.setZoom(10)
 		this.clipboard = []
 		if(!this.history) this.history = new History()
@@ -76,37 +76,48 @@ export class Grid {
 				console.log('history action : ' + action)
 				if(!action) return
 
+				let hist
 				let tiles = false
-				let toAdd = []
-				let toRemove = []
+				let tAdd = []
+				let tRemove = []
+				let relations = []
 				switch(action) {
 					//undo
 					case 'undo' :
-						tiles = this.history.prev()
-						toAdd = (tiles) ? tiles.removed : []
-						toRemove = (tiles) ? tiles.added : []
+						hist = 	this.history.prev()					
+						tiles = (hist) ? hist.tiles : false
+						tAdd = (tiles) ? tiles.removed : []
+						tRemove = (tiles) ? tiles.added : []
+						relations = (hist && hist.relations) ? hist.relations.removed : []
 						break
-
+						
 					//redo
 					case 'redo' :
-						tiles = this.history.next()
-						toAdd = (tiles) ? tiles.added : []
-						toRemove = (tiles) ? tiles.removed : []
+						hist = this.history.next()
+						tiles = (hist) ? hist.tiles : false
+						tAdd = (tiles) ? tiles.added : []
+						tRemove = (tiles) ? tiles.removed : []
+						relations = (hist && hist.relations) ? hist.relations.added : []
 						break
 				}
 
-				console.log({toRemove, toAdd})
+				console.log(hist)
 
 				if(!tiles) return
 
 				//supprimer les tiles
-				toRemove.forEach(tile => {
+				tRemove.forEach(tile => {
 					tile.layer.removeTile(tile)
 				})
 
 				//ajouter les tiles
-				toAdd.forEach(tile => {
+				tAdd.forEach(tile => {
 					tile.layer.addTile(tile)
+				})
+
+				//ajouter les relations
+				relations.forEach(r => {
+					r.tileA.layer.addRelation(r.tileA, r.tileB)
 				})
 
 				this.level.edited = true
@@ -128,6 +139,8 @@ export class Grid {
 				if(!actionBtn) return
 
 				let tiles
+				let hist
+				let relations
 				let action
 				const sel = this.selection.selection
 				if(!sel) return
@@ -135,31 +148,52 @@ export class Grid {
 				switch(actionBtn) {
 					//copier
 					case 'copy' : 
-						this.clipboard = this.getTilesInSelection(sel, this.level.currentLayer)
+						tiles = this.getTilesInSelection(sel, this.level.currentLayer)
+						relations = tiles.map(t => (t instanceof Tile) ? t.datas.relations : false ).flat()
+						this.clipboard = {tiles, relations}
+						hist = false
+
 						$output.hidden = false
 						setTimeout(() => {$output.hidden = true}, 1200)
 						break
 
 					//couper
 					case 'cut' :
-						this.clipboard = this.getTilesInSelection(sel, this.level.currentLayer)
+						tiles = this.getTilesInSelection(sel, this.level.currentLayer)
+						relations = tiles.map(t => (t instanceof Tile) ? t.datas.relations : false ).flat()
+						this.clipboard = {tiles, relations}
+
 						action = {
 							name 		: 'erase',
 							layer 		: this.level.currentLayer
 						}
-						tiles = this.paintAction(sel, action)
+						hist = this.paintAction(sel, action)
 						break
 
 					//coller
 					case 'paste' : 
-						if(!this.clipboard || this.clipboard.length <= 0) break
+						if(!this.clipboard || !this.clipboard.tiles || this.clipboard.tiles.length < 1) break
 
-						const dx = sel.x - this.clipboard[0].x
-						const dy = sel.y - this.clipboard[0].y
-						tiles = {removed : [], added : [], selected : []}
+						const dx = sel.x - this.clipboard.tiles[0].x
+						const dy = sel.y - this.clipboard.tiles[0].y
+						hist = {
+							tiles 		: {
+								removed 	: [], 
+								added 		: [], 
+								selected 	: []
+							},
+							relations 	: {
+								removed 	: [], 
+								added 		: []
+							
+							}
+						}
 						const layer = this.level.currentLayer
 
-						this.clipboard.forEach(tile => {
+						console.log('clipboard')
+						console.log(this.clipboard)
+
+						this.clipboard.tiles.forEach(tile => {
 							const x = tile.x + dx
 							const y = tile.y + dy
 							const s = {x, y, w: 1, h : 1}
@@ -173,11 +207,11 @@ export class Grid {
 							const res = this.paintAction(s, action)
 
 							//clone datas
-							if(res.added.length > 0) {
-								const clone = res.added[0]
+							if(res.tiles.added.length > 0) {
+								const clone = res.tiles.added[0]
 
 								console.log('clone ' + tile.name)
-								console.log(tile.datas._name)
+								
 								if(tile.datas._name && tile.datas._name != '')
 									clone.name = tile.datas.name + ' (copy)'
 
@@ -194,14 +228,22 @@ export class Grid {
 									clone.layer.addPath(clone, clone.datas.path)
 								}
 								
-								//cloner la relation si la relation est dans la selection
-								if(tile.datas.relation) {
-									const rel = this.clipboard.find(t => t == tile.datas.relation)
-									if(rel) {
-										clone.datas._relation = (rel.x + dx) + ',' + (rel.y + dy)
-										clone.layer.addRelation(clone, clone.datas.relation)
+								//cloner les relations
+								relations = Relation.filterTileRelations(this.clipboard.relations, tile)
+								
+
+								relations.forEach(r => {
+									let tb
+									if(this.clipboard.tiles.includes(r.other(tile))) 
+										tb = clone.layer.findTileAt(r.other(tile).x + dx, r.other(tile).y + dy)
+									else 
+										tb = r.other(tile)
+
+									if(tb) {
+										const rel = clone.layer.addRelation(clone, tb)
+										if(rel) res.relations.added.push(rel)
 									}
-								}
+								})
 
 								//cloner les autres datas
 								if(tile.datas.datas) {
@@ -209,27 +251,29 @@ export class Grid {
 								}
 							}
 
-							tiles.removed.push(...res.removed)
-							tiles.added.push(...res.added)
-							tiles.selected.push(...res.selected)
+							hist.tiles.removed.push(...res.tiles.removed)
+							hist.tiles.added.push(...res.tiles.added)
+							hist.tiles.selected.push(...res.tiles.selected)
+							hist.relations.removed.push(...res.relations.removed)
+							hist.relations.added.push(...res.relations.added)
 						})
 
 						//nouvelle selection
-						const current = (tiles.added.length > 0) ? tiles.added[0] : false
+						const current = (hist.tiles.added.length > 0) ? hist.tiles.added[0] : false
 						const selection = {
-							x: this.clipboard[0].x + dx, 
-							y: this.clipboard[0].y + dy,
-							w: this.clipboard[this.clipboard.length - 1].x - this.clipboard[0].x + 1,
-							h: this.clipboard[this.clipboard.length - 1].y - this.clipboard[0].y + 1
+							x: this.clipboard.tiles[0].x + dx, 
+							y: this.clipboard.tiles[0].y + dy,
+							w: this.clipboard.tiles[this.clipboard.tiles.length - 1].x - this.clipboard.tiles[0].x + 1,
+							h: this.clipboard.tiles[this.clipboard.tiles.length - 1].y - this.clipboard.tiles[0].y + 1
 						}
-						this.selection = {current, tiles : tiles.added, selection}
+						this.selection = {current, tiles : hist.tiles.added, selection}
 						if(current) current.setDatasHTML()
 						else Datas.clearHTML()
 						break
 				}
 				
 				//push dans l'historique
-				if(tiles && (tiles.removed.length > 0 || tiles.added.length > 0)) this.history.push(tiles)
+				if(hist && (hist.tiles.removed.length > 0 || hist.tiles.added.length > 0)) this.history.push(hist)
 
 				this.draw()
 			})
@@ -260,17 +304,17 @@ export class Grid {
 					model 		: Settings.getInstance().currentModel.slug,
 				}
 
-				const tiles = this.paintAction(selection, action)
+				const result = this.paintAction(selection, action)
 				this.cursor.end = false
 				
 				this.draw()
 				
-				if(tiles.removed.length > 0 || tiles.added.length > 0) {
-					this.history.push(tiles)
+				if(result.tiles.removed.length > 0 || result.tiles.added.length > 0) {
+					this.history.push(result)
 				}
 
 				//dispatch event paint
-				const detail = { tiles, action, selection }
+				const detail = { result, action, selection }
 				$canvas.dispatchEvent(new CustomEvent('paint', { detail: detail }))
 			}
 		})
@@ -292,11 +336,11 @@ export class Grid {
 
 		//paint
 		$canvas.addEventListener('paint', evt => {
-			const tiles = evt.detail.tiles.selected
+			const tiles = evt.detail.result.tiles.selected
 			const current = (tiles.length > 0) ? tiles[0] : false
 			const selection = (Settings.getInstance().currentTool == 'select') ? evt.detail.selection : false
 			this.selection = {current, tiles, selection}
-			console.log(this.selection)
+			
 			if(current) current.setDatasHTML()
 			else Datas.clearHTML()
 		})
@@ -448,9 +492,16 @@ export class Grid {
 			return
 		}
 
-		const removed = []
-		const added = []
-		const selected = []
+		const tiles = {
+			added 		: [],
+			removed 	: [],
+			selected	: []
+		}
+
+		const relations = {
+			added		: [],
+			removed		: []
+		}
 
 		for(let l = sel.y; l < sel.y + sel.h; l++) {
 			for(let c = sel.x; c < sel.x + sel.w; c++) {
@@ -464,9 +515,14 @@ export class Grid {
 						founds.forEach(tile => {
 							if(tile) {
 								if(!tile.layer.locked && tile.layer.visible) {
+									//stocker les relations
+									tile.datas.relations.forEach(r => {
+										if(!relations.removed.includes(r)) relations.removed.push(r)
+									})
+
 									//supprimer la tile existante
 									tile.layer.removeTile(tile)
-									removed.push(tile)
+									tiles.removed.push(tile)
 									noTile = true
 								} else {
 									noTile = false
@@ -477,7 +533,7 @@ export class Grid {
 						//ajouter la tile
 						if(noTile) {
 							tile = action.layer.addTile(c, l, action.model)
-							added.push(tile)
+							tiles.added.push(tile)
 						}
 						break
 
@@ -487,9 +543,14 @@ export class Grid {
 						founds.forEach(tile => {
 							if(tile) {
 								if(!tile.layer.locked && tile.layer.visible) {
+									//stocker les relations
+									tile.datas.relations.forEach(r => {
+										if(!relations.removed.includes(r)) relations.removed.push(r)
+									})
+
 									//supprimer la tile existante
 									tile.layer.removeTile(tile)
-									removed.push(tile)
+									tiles.removed.push(tile)
 								}
 							}
 						})
@@ -498,7 +559,7 @@ export class Grid {
 					//selectionner
 					case 'select' :
 						tile = action.layer.findTileAt(c, l)
-						if(tile) selected.push(tile)
+						if(tile) tiles.selected.push(tile)
 						break
 
 					//defaut
@@ -508,16 +569,10 @@ export class Grid {
 			}
 		}
 
-		if(removed.length > 0 || added.length > 0 || selected.length > 0)
+		if(tiles.removed.length > 0 || tiles.added.length > 0 || tiles.selected.length > 0)
 			this.level.edited = true
 		
-		const tiles = {
-			removed,
-			added,
-			selected
-		}
-		
-		return tiles
+		return {tiles, relations}
 	}
 
 	//convertir un touch en position dans le canvas
@@ -706,7 +761,7 @@ export class Grid {
 		ctx.fillStyle = Grid.styles.cursor.current.color
 		ctx.font = Grid.styles.cursor.current.text
 		let txt = this.cursor.start.x + ', ' + this.cursor.start.y + ' (' + s.w + ', ' + s.h + ')'
-		ctx.fillText(txt, origin.x, origin.y - z)
+		ctx.fillText(txt, origin.x, origin.y - Grid.styles.cursor.current.margin)
 	}
 
 	//dessiner la premiere tile selectionnée
@@ -735,7 +790,7 @@ export class Grid {
 			ctx.font = Grid.styles.selected.current.text
 			let txt = sel.selection.x + ', ' + sel.selection.y + ' (' + sel.selection.w + ', ' + sel.selection.h + ')'
 			const pos = this.gridToPixel(sel.selection.x, sel.selection.y, z)
-			ctx.fillText(txt, pos.x, pos.y - z)
+			ctx.fillText(txt, pos.x, pos.y - Grid.styles.selected.current.margin)
 		}
 	}
 
@@ -745,8 +800,8 @@ export class Grid {
 		const bo = this.bounds
 		const z = this.zoom
 		
-		const ta = relation[0]
-		const tb = relation[1]
+		const ta = relation.tileA
+		const tb = relation.tileB
 		
 		if(!Grid.inBounds(ta.position, bo) && !Grid.inBounds(tb.position, bo)) return
 		
@@ -835,7 +890,8 @@ export class Grid {
 				current		: {
 					color 		: '#DD0066',
 					width 		: 3,
-					text 		: '16px content'
+					text 		: '16px content',
+					margin		: 10
 				},
 				multiple	: {
 					color 		: '#DD006655',
@@ -845,7 +901,8 @@ export class Grid {
 				current		: {
 					color 		: '#22DD00',
 					width 		: 3,
-					text 		: '16px content'
+					text 		: '16px content',
+					margin		: 10
 				},
 				multiple	: {
 					color 		: '#22DD0055',

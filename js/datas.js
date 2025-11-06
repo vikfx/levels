@@ -1,11 +1,11 @@
 import { World } from './world.js'
 import { Grid } from './grid.js'
 import { ModalBox } from './modalbox.js'
+import { Relation } from './relation.js'
 
 export class Datas {
 	tile				//tile rattaché aux datas
 	_name				//nom en local
-	_relation			//relation en local
 	path				//chemin
 	datas				//le tableau des autres datas
 
@@ -25,25 +25,18 @@ export class Datas {
 		this._name = (value != 'tile (' + this.tile.x + ', ' + this.tile.y + ')') ? value : ''
 	}
 
-	//renvoyer la tile de la relation
-	get relation() {
-		if(!this._relation || this._relation == '') return
-
-		const r = this._relation.split(',')
-		if(r.length != 2) return
-		const x = Number(r[0])
-		const y = Number(r[1])
-
-		return this.tile.layer.findTileAt(x, y)
+	//revoyer la liste des relations
+	get relations() {
+		return Relation.filterTileRelations(this.tile.layer.relations, this.tile)
 	}
-	
-	//attribuer la relation selon la tile
-	set relation(value) {
-		this._relation = (value) ? value.x + ',' + value.y : ''
+
+	//renvoyer la liste des tiles en relation
+	get related() {
+		return this.relations.map(r => r.other(this.tile))
 	}
 
 	//creer le html dans le parent
-	createHTML(tile) {
+	createHTML() {
 		//clone
 		let $c = Datas.$containers
 		World.cloneEl([$c.selection.container, $c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
@@ -89,46 +82,39 @@ export class Datas {
 
 		$c.delete.addEventListener('click', evt => {
 			this.tile.layer.removeTile(this.tile)
+
+			const tiles = {
+				removed : [this.tile],
+				added : [],
+				selected : []
+			}
+			Grid.getInstance().history.push(tiles)
+			
 			Grid.getInstance().draw()
 		})
 
-		//relation
+		//relations
 		$c = Datas.$containers.relation
-		$c.name.innerHTML = (this.relation) ? this.relation.name : ''
-		$c.select.addEventListener('click', evt => {
+		$c.ul.innerHTML = ''
+		this.related.forEach(t => this.addRelation(t))
+		$c.add.addEventListener('click', evt => {
 			const $canvas = Grid.$containers.canvas
+			$canvas.removeEventListener('paint', selectRelation, {capture : true})
 			$canvas.addEventListener('paint', selectRelation, {capture : true})
 			const data = this
-
+	
 			//event once
 			function selectRelation(e) {
 				e.stopImmediatePropagation()
-				const t = (e.detail.tiles.selected.length > 0) ? e.detail.tiles.selected[0] : null
+				const t = (e.detail.result.tiles.selected.length > 0) ? e.detail.result.tiles.selected[0] : null
 				if(t) {
-					data.setRelation(t)
-					data.tile.layer.addRelation(data.tile, t)
-					Datas.$containers.relation.name.innerHTML = t.name
+					const rel = data.tile.layer.addRelation(data.tile, t)
+					if(rel) data.addRelation(t)
 				}
-
+	
 				$canvas.removeEventListener('paint', selectRelation, {capture : true})
 			}
-		})
-		$c.goto.addEventListener('click', evt => {
-			if(this.relation) {
-				const grid = Grid.getInstance()
-				if(grid.selection.tiles.indexOf(this.relation) < 0) grid.selection.tiles = [this.relation]
-				grid.selection.current = this.relation
-				this.relation.setDatasHTML()
-				grid.draw()
-			}
-		})
-		$c.delete.addEventListener('click', evt => {
-			this.setRelation(null)
 
-			this.tile.layer.removeRelation(this.tile)
-
-			Datas.$containers.relation.name.innerHTML = ''	
-			Grid.getInstance().draw()
 		})
 
 		//path
@@ -178,7 +164,7 @@ export class Datas {
 		$c.ul.innerHTML = ''
 		Object.entries(this.datas).forEach(([k, v])  => {
 			switch(k) {
-				case 'relation' : 
+				case 'relations' : 
 				case 'path' :
 					break
 
@@ -186,7 +172,6 @@ export class Datas {
 					this.addData(k, v)
 					break
 			}
-
 		})
 
 		$c.new.key.value = ''
@@ -196,13 +181,98 @@ export class Datas {
 			const k = Datas.$containers.datas.new.key.value
 			const v = Datas.$containers.datas.new.val.value
 			if(k === '' || v === '') return
-			if(k == 'path' || k == 'relation') {
+			if(k == 'path' || k == 'relation' || k == 'relations') {
 				ModalBox.alert('la clé ' + k + ' est reservée')
 				return
 			}
 			this.datas[k] = v
 			this.addData(k, v)
 		})
+	}
+
+	//vider les contenu html
+	static clearHTML() {
+		//clone
+		let $c = Datas.$containers
+		World.cloneEl([$c.selection.container, $c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
+		
+		//selection
+		$c = Datas.$containers.selection
+		$c.qty.innerHTML = 0
+
+		//infos
+		$c = Datas.$containers.infos
+		$c.name.value = ''
+		$c.x.innerHTML = ''
+		$c.y.innerHTML = ''
+		$c.ref.value = ''
+
+		//relation
+		$c = Datas.$containers.relation
+		$c.ul.innerHTML = ''
+
+		//path
+		$c = Datas.$containers.path
+		$c.color.value = ''
+		$c.ul.innerHTML = ''
+		$c.new.x.value = ''
+		$c.new.y.value = ''
+		$c.new.form.addEventListener('submit', evt => { evt.preventDefault() })
+
+		//datas
+		$c = Datas.$containers.datas
+		$c.ul.innerHTML = ''
+		$c.new.key.value = ''
+		$c.new.val.value = ''
+		$c.new.form.addEventListener('submit', evt => { evt.preventDefault() })
+	}
+
+	//ajouter une relation
+	addRelation(tile) {
+		const $ul = Datas.$containers.relation.ul
+
+		const $li = document.createElement('li')
+		$li.classList.add('line')
+
+		//titre
+		const $h = document.createElement('h4')
+		$h.innerHTML = tile.name
+
+		//bouton go to
+		const $goto = document.createElement('button')
+		$goto.dataset.action = 'goto'
+		$goto.innerHTML = 'go to'
+		$goto.addEventListener('click', evt => {
+			const grid = Grid.getInstance()
+			if(grid.selection.tiles.indexOf(tile) < 0) {
+				grid.selection.tiles = [tile]
+				grid.selection.selection = {
+					x: tile.x, 
+					y: tile.y,
+					w: 1,
+					h: 1
+				}
+			}
+			
+			grid.selection.current = tile
+			tile.setDatasHTML()
+			grid.draw()
+		})
+		
+		//bouton suppr
+		const $del = document.createElement('button')
+		$del.dataset.action = 'delete'
+		$del.innerHTML = 'supprimer'
+		$del.addEventListener('click', evt => {
+			$ul.removeChild($li)
+			this.tile.layer.removeRelation(this.tile, tile)
+			Grid.getInstance().draw()
+		})
+
+		$li.appendChild($h)
+		$li.appendChild($goto)
+		$li.appendChild($del)
+		$ul.appendChild($li)
 	}
 	
 	//ajouter un point
@@ -301,64 +371,17 @@ export class Datas {
 		$ul.appendChild($li)
 	}
 
-	//definir une relation
-	setRelation(tile) {
-		if(this.relation) this.relation.datas.relation = null
-		if(tile && tile.datas.relation) tile.datas.relation.datas.relation = null
-
-		this.relation = tile
-		if(tile) {
-			tile.datas.relation = this.tile
-			//this.tile.layer.addRelation(this.tile, tile)
-		} else {
-			//this.tile.layer.removeRelation(this.tile)
-		}
-	}
-	
-	//vider les contenu html
-	static clearHTML() {
-		//clone
-		let $c = Datas.$containers
-		World.cloneEl([$c.selection.container, $c.infos.container, $c.relation.container, $c.path.container, $c.datas.container])
-		
-		//selection
-		$c = Datas.$containers.selection
-		$c.qty.innerHTML = 0
-
-		//infos
-		$c = Datas.$containers.infos
-		$c.name.value = ''
-		$c.x.innerHTML = ''
-		$c.y.innerHTML = ''
-		$c.ref.value = ''
-
-		//relation
-		$c = Datas.$containers.relation
-		$c.name.innerHTML = ''
-
-		//path
-		$c = Datas.$containers.path
-		$c.color.value = ''
-		$c.ul.innerHTML = ''
-		$c.new.x.value = ''
-		$c.new.y.value = ''
-		$c.new.form.addEventListener('submit', evt => { evt.preventDefault() })
-
-		//datas
-		$c = Datas.$containers.datas
-		$c.ul.innerHTML = ''
-		$c.new.key.value = ''
-		$c.new.val.value = ''
-		$c.new.form.addEventListener('submit', evt => { evt.preventDefault() })
-	}
-	
 	//convertir en tableau json
 	toJSON() {
 		//contruire le tableau des datas
 		const json = {}
 
+		//path
 		if(this.path && (this.path.points.length > 0 || this.path.color)) json.path = this.path
-		if(this.relation) json.relation = this._relation
+
+		//relation
+		if(this.relations.length > 0) json.relations = this.relations.map(r => r.otherCoords(this.tile))
+
 
 		Object.entries(this.datas).forEach(([k, v]) => {
 			switch(k) {
@@ -379,8 +402,16 @@ export class Datas {
 		this.datas = {}
 		Object.entries(datas).forEach(([k, v]) => {
 			switch(k) {
-				case 'relation' :
-					this._relation = v
+				case 'relations' :
+					v.forEach(relation => {
+						const ly = this.tile.layer
+						const r = relation.split(',')
+						if(r.length != 2) return
+						const x = Number(r[0])
+						const y = Number(r[1])
+						const tb = ly.findTileAt(x, y)
+						if(tb) ly.addRelation(this.tile, tb)
+					})
 					break
 					
 				case 'path' :
@@ -444,11 +475,9 @@ export class Datas {
 		//relation
 		const $relation = document.querySelector('#tile-relation')
 		if(!$relation) throw new Error('pas de container pour les relations de la tile')
-		const $rname = $relation.querySelector('.relation-name span')
-		const $bselect = $relation.querySelector('button[data-action=select]')
-		const $bgoto = $relation.querySelector('button[data-action=goto]')
-		const $bdelete = $relation.querySelector('button[data-action=delete]')
-		if(!$rname || !$bselect || !$bgoto || !$bdelete) throw new Error('le containers #tile-relation ne contient pas les elements adequats')
+		const $rul = $relation.querySelector(':scope > ul')
+		const $radd = $relation.querySelector('button[data-action=add]')
+		if(!$radd || !$rul) throw new Error('le containers #tile-relation ne contient pas les elements adequats')
 			
 		//path
 		const $path = document.querySelector('#tile-path')
@@ -489,10 +518,8 @@ export class Datas {
 			},
 			relation	: {
 				container	: $relation,
-				name 		: $rname,
-				select		: $bselect,
-				goto		: $bgoto,
-				delete		: $bdelete
+				add			: $radd,
+				ul			: $rul
 			},
 			path 		: {
 				container	: $path,
