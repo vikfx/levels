@@ -230,14 +230,12 @@ export class Grid {
 								
 								//cloner les relations
 								relations = Relation.filterTileRelations(this.clipboard.relations, tile)
-								
-
 								relations.forEach(r => {
 									let tb
-									if(this.clipboard.tiles.includes(r.other(tile))) 
+									if(this.clipboard.tiles.includes(r.other(tile)))
 										tb = clone.layer.findTileAt(r.other(tile).x + dx, r.other(tile).y + dy)
-									else 
-										tb = r.other(tile)
+									else
+										tb = clone.layer.findTileAt(r.other(tile).x, r.other(tile).y)
 
 									if(tb) {
 										const rel = clone.layer.addRelation(clone, tb)
@@ -613,9 +611,9 @@ export class Grid {
 
 	//tableau des tiles depuis une selection
 	getTilesInSelection(sel, layer) {
-		if(!layer) return
-		if(layer.locked || !layer.visible) return
-		if(!sel) return
+		if(!layer) return []
+		if(layer.locked || !layer.visible) return []
+		if(!sel) return []
 
 		const tiles = []
 		for(let l = sel.y; l < sel.y + sel.h; l++) {
