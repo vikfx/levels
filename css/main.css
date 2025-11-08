@@ -79,7 +79,7 @@ button:active, input[type=submit]:active {
 	background-color: transparent;
 }
 
-.button.on {
+.button.on, .tools .button.on {
     border-color: var(--color-accent3);
     background-color: var(--color-accent3);
     color: var(--color-accent2);
@@ -273,12 +273,63 @@ SIDEBAR
 
 /***** level mode *****/
 /* tools */
+#toolbar {
+    display: flex;
+    padding: var(--space-s);
+    flex-direction: row;
+    order: -1;
+    gap: var(--space-m);
+	position: relative;
+	background-color: var(--color-accent1);
+}
+
 .tools {
     display: flex;
     gap: var(--space-xs);
 	align-items: center;
 }
 
+.tools .button {
+	width: 32px;
+	aspect-ratio: 1;
+	background-repeat: no-repeat;
+	background-size: cover;
+	font-size: 0;
+	background-color: var(--color-accent1);
+	border-color: var(--color-accent2);
+}
+
+.button[data-action="undo"] {
+	background-image: url(../images/icons_undo.png);
+}
+.button[data-action="redo"] {
+	background-image: url(../images/icons_redo.png);
+}
+.button[data-action="copy"] {
+	background-image: url(../images/icons_copy.png);
+}
+.button[data-action="cut"] {
+	background-image: url(../images/icons_cut.png);
+}
+.button[data-action="paste"] {
+	background-image: url(../images/icons_paste.png);
+}
+.button[data-action="paint"] {
+	background-image: url(../images/icons_paint.png);
+}
+.button[data-action="erase"] {
+	background-image: url(../images/icons_erase.png);
+}
+.button[data-action="select"] {
+	background-image: url(../images/icons_select.png);
+}
+
+.tools .return {
+    position: absolute;
+    bottom: -1.2em;
+    right: var(--space-m);
+    color: var(--color-accent2);
+}
 
 /* model tiles */
 .models {
