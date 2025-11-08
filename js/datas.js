@@ -296,7 +296,8 @@ export class Datas {
 		const $ix = document.createElement('input')
 		const $iy = document.createElement('input')
 
-		$ix.type ='number'
+		$ix.type ='text'
+		$ix.inputMode = 'numeric'
 		$ix.name = 'x'
 		$ix.placeholder = 'x'
 		$ix.value = point.x
@@ -305,7 +306,8 @@ export class Datas {
 			Grid.getInstance().draw()
 		})
 		
-		$iy.type ='number'
+		$iy.type ='text'
+		$iy.inputMode = 'numeric'
 		$iy.name = 'y'
 		$iy.placeholder = 'y'
 		$iy.value = point.y
