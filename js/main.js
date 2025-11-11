@@ -261,15 +261,16 @@ function manageTabs() {
 			})
 
 			document.querySelectorAll('#tabs .tab').forEach($tab => {
-				if($tab.id == id + '-mode')
+				if($tab.id == id)
 					$tab.classList.add('on')
 				else
 					$tab.classList.remove('on')
 			})
 
 			document.querySelectorAll('#main-content canvas').forEach($canvas => {
-				if(!document.querySelector('#main-content canvas#' + id + '-map')) return
-				if($canvas.id == id + '-map')
+				const cid = $btn.dataset.canvas
+				if(!document.querySelector('#main-content canvas#' + cid + '-map')) return
+				if($canvas.id == cid + '-map')
 					$canvas.classList.add('on')
 				else
 					$canvas.classList.remove('on')

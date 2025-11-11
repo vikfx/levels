@@ -58,97 +58,97 @@
 					<li id="tile-z">zoom 0000</li>
 				</ul>
 				<nav id="tabs-nav">
-					<a class="on" href="#world">World</a>
-					<a href="#level">Level</a>
-					<a href="#tile">Tile</a>
+					<a class="on" href="#world" data-canvas="world">World</a>
+					<a href="#palettes" data-canvas="level">Palettes</a>
+					<a href="#layers" data-canvas="level">Layers</a>
+					<a href="#tiles" data-canvas="level">Tile</a>
 				</nav>
 			</header>
 
 			<section id="toolbar">
 				<ul id="history-tools" class="tools">
-					<li class="button" data-action="undo">undo</li>
-					<li class="button" data-action="redo">redo</li>
+					<li class="button" data-action="undo" title="undo">undo</li>
+					<li class="button" data-action="redo" title="redo">redo</li>
 				</ul>
 				<ul id="copy-tools" class="tools">
-					<li class="button" data-action="copy">copy</li>
-					<li class="button" data-action="cut">cut</li>
-					<li class="button" data-action="paste">paste</li>
+					<li class="button" data-action="copy" title="copy">copy</li>
+					<li class="button" data-action="cut" title="cut">cut</li>
+					<li class="button" data-action="paste" title="paste">paste</li>
 					<li class="return" hidden>copié</li>
 				</ul>
 				<ul id="palette-tools" class="tools">
-					<li class="button" data-action="paint">pinceau</li>
-					<li class="button" data-action="erase">gomme</li>
-					<li class="button default" data-action="select">selecteur</li>
+					<li class="button" data-action="paint" title="pinceau">pinceau</li>
+					<li class="button" data-action="erase" title="gomme">gomme</li>
+					<li class="button default" data-action="select" title="select">selecteur</li>
 				</ul>
 			</section>
 
 			<section id="tabs">
-				<!-- #level-mode -->
-				<div id="level-mode" class="tab">
-					<div id="palettes">
-						<h3>Palettes</h3>
-						<nav>
-							<!-- <a href="#palette-###" class="on">###</a> -->
-						</nav>
-						<ul>
-							<!-- <li class="palette" id="palette-###">
-								<ul class="models">
-									<li id="###">
-										<h5>###</h5>
-										<img src="###">
-									</li>
-								</ul>
-							</li> -->
-						</ul>
-						
-						<form id="add-model" class="box">
-							<h4>Ajouter un modèle</h4>
-							<input type="text" name="model-name" value="" placeholder="nom du model">
-							<input type="text" name="model-slug" value="" placeholder="slug du model">
-							<input type="file" name="model-image">
-							<input type="submit" value="ajouter">
-						</form>
-						
-						<form id="add-palette" class="box">
-							<h4>Ajouter une palette</h4>
-							<input type="text" name="palette-name" value="" placeholder="nom de la palette">
-							<input type="text" name="palette-slug" value="" placeholder="slug de la palette">
-							<input type="submit" value="ajouter">
-						</form>
-					</div>
+				<!-- #palettes -->
+				<div id="palettes" class="tab">
+					<h3>Palettes</h3>
+					<nav>
+						<!-- <a href="#palette-###" class="on">###</a> -->
+					</nav>
+					<ul>
+						<!-- <li class="palette" id="palette-###">
+							<ul class="models">
+								<li id="###">
+									<h5>###</h5>
+									<img src="###">
+								</li>
+							</ul>
+						</li> -->
+					</ul>
+					
+					<form id="add-model" class="box">
+						<h4>Ajouter un modèle</h4>
+						<input type="text" name="model-name" value="" placeholder="nom du model">
+						<input type="text" name="model-slug" value="" placeholder="slug du model">
+						<input type="file" name="model-image">
+						<input type="submit" value="ajouter">
+					</form>
+					
+					<form id="add-palette" class="box">
+						<h4>Ajouter une palette</h4>
+						<input type="text" name="palette-name" value="" placeholder="nom de la palette">
+						<input type="text" name="palette-slug" value="" placeholder="slug de la palette">
+						<input type="submit" value="ajouter">
+					</form>	
+				</div> <!-- /#palettes -->
 
-					<div id="layers">
-						<h3>Layers</h3>
-						<ul>
-							<!-- <li class="layer" data-layer-id="XXX">
-								<h4 class="line">
-									<button data-action="visible">afficher</button>
-									<button data-action="locked">verrouiller</button>
-									<input type="text" value="XXX">
-									<button data-action="toggle">replier</button>
+				<!-- #layers -->
+				<div id="layers" class="tab">
+					<h3>Layers</h3>
+					<ul>
+						<!-- <li class="layer" data-layer-id="XXX">
+							<h4 class="line">
+								<button data-action="visible">afficher</button>
+								<button data-action="locked">verrouiller</button>
+								<input type="text" value="XXX">
+								<button data-action="toggle">replier</button>
+								<button data-action="delete">supprimer</button>
+							</h4>
+							<ul class="tiles">
+								<li class="tile" data-x="0" data-y="0" data-ref="XXX" data-infos="">
+									<img src="XXX" alt="tile model">
+									<h5>XXX</h5>
+									<button data-action="select">select</button>
 									<button data-action="delete">supprimer</button>
-								</h4>
-								<ul class="tiles">
-									<li class="tile" data-x="0" data-y="0" data-ref="XXX" data-infos="">
-										<img src="XXX" alt="tile model">
-										<h5>XXX</h5>
-										<button data-action="select">select</button>
-										<button data-action="delete">supprimer</button>
-									</li>
-								</ul>
-							</li> -->
-						</ul>
-						<form id="add-layer" class="box">
-							<h4>Ajouter un layer</h4>
-							<input type="text" name="layer-name" value="" placeholder="nom du layer">
-							<input type="text" name="layer-slug" value="" placeholder="slug du layer">
-							<input type="submit" value="ajouter">
-						</form>
-					</div>
-				</div> <!-- /#level-mode -->
+								</li>
+							</ul>
+						</li> -->
+					</ul>
+					<form id="add-layer" class="box">
+						<h4>Ajouter un layer</h4>
+						<input type="text" name="layer-name" value="" placeholder="nom du layer">
+						<input type="text" name="layer-slug" value="" placeholder="slug du layer">
+						<input type="submit" value="ajouter">
+					</form>
+				</div> <!-- /#layers -->
 
-				<!-- #world-mode -->
-				<div id="world-mode" class="tab on">
+				<!-- #world -->
+				<div id="world" class="tab on">
 					<div id="world">
 						<form id="world-size" class="box">
 							<h4>Taille de la map</h4>
@@ -189,10 +189,10 @@
 							<input type="submit" value="ajouter">
 						</form>
 					</div>
-				</div> <!-- /#world-mode -->
+				</div> <!-- /#world -->
 
-				<!-- #tile-mode -->
-				<div id="tile-mode" class="tab">
+				<!-- #tiles -->
+				<div id="tiles" class="tab">
 					<div id="tile-selection">
 						<p><span>0</span> tile(s) selectionnée(s)</p>
 						<button data-action="prev">prev</button>
@@ -269,7 +269,7 @@
 							<input type="submit" value="ajouter">
 						</form>
 					</div>
-				</div> <!-- /#tile-mode -->
+				</div> <!-- /#tiles -->
 			</section>
 
 		</aside>
