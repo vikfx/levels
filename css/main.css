@@ -107,6 +107,10 @@ HEADER
 	font-size: 1em;
 }
 
+input[name="autosave"] {
+    width: 50px;
+}
+
 
 /*****
 MODAL

@@ -7,6 +7,7 @@ import { FetchAPI } from './fetchAPI.js'
 // const settings = new Settings();
 
 let levelDesign
+let currentProject = ''
 
 document.addEventListener('DOMContentLoaded', (evt) => {
 	console.log('hello main')
@@ -108,6 +109,7 @@ function projectRequest() {
 		//nom du dernier projet
 		if(localStorage.getItem('projectName')) $pname.value = localStorage.getItem('projectName')
 
+		//submit form
 		$form.addEventListener('submit', async (evt) => {
 			evt.preventDefault()
 			
@@ -138,6 +140,36 @@ function projectRequest() {
 			}
 		})
 	})
+
+	//autosave
+	const $autosave = document.querySelector('input[name="autosave"')
+	if($autosave) {
+		$autosave.addEventListener('change', autoSave)
+	}
+}
+
+//fonction d'autosave
+let saveTimer
+function autoSave() {
+	console.log('init autosave')
+	if(saveTimer) clearTimeout(saveTimer)
+	
+	const $autosave = document.querySelector('input[name="autosave"')
+	if(!$autosave) return
+	const time = Number($autosave.value) * 60 * 1000
+
+	if(time <= 0) return
+	saveTimer = setTimeout(() => {
+		console.log('autosave')
+		if(!window.levelDesign || currentProject == '' || localStorage.getItem('projectName') != currentProject) {
+			if(saveTimer) clearTimeout(saveTimer)
+			console.log('end autosave')
+			return
+		}
+
+		saveJSON(currentProject)
+		autoSave()
+	}, time)
 }
 
 //recuperer le json
@@ -160,7 +192,7 @@ function loadJSON(project) {
 			).then(outputs => {
 				FetchAPI.$loader.hidden = true
 				output.datas.world.levels = outputs.map(o => JSON.parse(o.datas) )
-				initMap(output.datas)
+				initMap(output.datas, project)
 			})
 		}
 	})
@@ -196,7 +228,7 @@ function saveJSON(project) {
 }
 
 //charger un level
-function initMap(json) {
+function initMap(json, projectName) {
 	console.log(json)
 
 	//charger dans le window
@@ -206,8 +238,10 @@ function initMap(json) {
 		grid : 			new Grid()
 	}
 	window.levelDesign = levelDesign
+	currentProject = projectName
 
 	console.log(levelDesign)
+	autoSave()
 }
 
 //gerer les onglets
@@ -244,12 +278,6 @@ function manageTabs() {
 
 		})
 	})
-}
-
-//masquer la modale
-function hideWelcome() {
-	const $welcome = document.querySelector('#welcome')
-	if($welcome) $welcome.classList.remove('on')
 }
 
 
