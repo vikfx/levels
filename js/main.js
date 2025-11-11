@@ -144,7 +144,12 @@ function projectRequest() {
 	//autosave
 	const $autosave = document.querySelector('input[name="autosave"')
 	if($autosave) {
-		$autosave.addEventListener('change', autoSave)
+		if(localStorage.getItem('saveTimer')) $autosave.value = localStorage.getItem('saveTimer')
+		$autosave.addEventListener('change', evt => {
+			localStorage.setItem('saveTimer', $autosave.value)
+			autoSave()
+		})
+	
 	}
 }
 
@@ -156,6 +161,7 @@ function autoSave() {
 	
 	const $autosave = document.querySelector('input[name="autosave"')
 	if(!$autosave) return
+	
 	const time = Number($autosave.value) * 60 * 1000
 
 	if(time <= 0) return

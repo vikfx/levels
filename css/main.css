@@ -111,6 +111,10 @@ input[name="autosave"] {
     width: 50px;
 }
 
+h1 a {
+    text-decoration: none;
+}
+
 
 /*****
 MODAL
