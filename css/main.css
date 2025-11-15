@@ -279,6 +279,13 @@ SIDEBAR
     height: 32px;
 }
 
+/* textarea */
+.tab textarea {
+    width: 100%;
+    min-height: 200px;
+	padding: var(--space-s);
+}
+
 /***** level mode *****/
 /* tools */
 #toolbar {
@@ -466,6 +473,11 @@ SIDEBAR
 #tile-infos select {
     width: 100%;
     margin-bottom: var(--space-s);
+}
+
+/***** description *****/
+#level-content {
+    min-height: 60vh;
 }
 
 

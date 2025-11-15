@@ -275,7 +275,7 @@ function manageTabs() {
 
 			document.querySelectorAll('#main-content canvas').forEach($canvas => {
 				const cid = $btn.dataset.canvas
-				if(!document.querySelector('#main-content canvas#' + cid + '-map')) return
+				if(!cid || !document.querySelector('#main-content canvas#' + cid + '-map')) return
 				if($canvas.id == cid + '-map')
 					$canvas.classList.add('on')
 				else

@@ -15,12 +15,14 @@ export class Level {
 	$el											//l'element html dans la tab monde
 	minimap										//l'image du level
 	edited = false								//si le level a été modifié après son dernier enregistrement
+	content										//contenu texte de la description
 
 	//init
-	constructor(name, slug, parent = '', bounds = {}, layers = []) {
+	constructor(name, slug, parent = '', bounds = {}, layers = [], content = '') {
 		this.slug = slug
 		this.name = name ?? slug
-		this.parent = parent ?? ''
+		this.content = content
+		this.parent = parent
 		this.bounds = bounds
 		
 		this.layers = []
@@ -135,11 +137,25 @@ export class Level {
 		this.$el = $li
 	}
 
+	//creation html du champ description
+	contentHTML() {
+		let $content = World.$containers.content
+		World.cloneEl([$content])
+		$content = World.$containers.content
+
+		$content.value = this.content
+		$content.addEventListener('change', evt => {
+			this.content = $content.value
+			this.edited = true
+		})
+	}
+
 	//convertir en tableau json
 	toJSON() {
 		return {
 			name 	: this.name,
 			slug 	: this.slug,
+			content	: this.content,
 			parent 	: this.parent,
 			bounds 	: this.bounds,
 			layers 	: this.layers.map(ly => ly.toJSON())
@@ -160,6 +176,8 @@ export class Level {
 			layer.createHTML()
 		})
 		if(this.layers.length > 0) this.layers[0].setActive()
+
+		this.contentHTML()
 		
 		const grid = Grid.getInstance()
 		grid.level = this

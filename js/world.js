@@ -155,7 +155,8 @@ export class World {
 		if(this.levels.find(level => level.slug == lvl.slug))
 			throw new Error('un level avec le slug ' + lvl.slug + ' existe déjà')
 		
-		const level = new Level(lvl.name, lvl.slug, lvl.parent, lvl.bounds, lvl.layers)
+		if(!lvl.content) lvl.content = ''
+		const level = new Level(lvl.name, lvl.slug, lvl.parent, lvl.bounds, lvl.layers, lvl.content)
 		this.levels.push(level)
 		this.draw()
 		return level
@@ -328,6 +329,10 @@ export class World {
 		//canvas du monde
 		const $canvas =  document.querySelector('#world-map')
 		if(!$canvas) throw new Error('canvas monde manquant')
+
+		//level description
+		const $description = document.querySelector('#level-content')
+		if(!$description) throw new Error('pas de champ description du level')
 	
 		return {
 			size 		: {
@@ -347,9 +352,11 @@ export class World {
 			},
 			levels 		: $levels,
 			title 		: $title,
+			content		: $description,
 			layers 		: $layers,
 			canvas 		: $canvas,
-			drawBtn 	: $draw
+			drawBtn 	: $draw,
+
 		}
 	}
 

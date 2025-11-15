@@ -434,14 +434,15 @@ function save_level($project, $level, $datas, $save_project = true) {
 				$start = ",\n";
 				break;
 				
-			case 'bounds' : 
+			default : 
+			//case 'bounds' : 
 				fwrite($fp, $tab . "\"" . $key . "\": ");
 				fwrite($fp, json_encode($val, JSON_UNESCAPED_UNICODE));
 				break;
 
-			default : 
-				fwrite($fp, $tab . "\"" . $key . "\": \"" . $datas[$key] . "\"");
-				break;
+			// default : 
+			// 	fwrite($fp, $tab . "\"" . $key . "\": \"" . $datas[$key] . "\"");
+			// 	break;
 		}
 		$start = ",\n";
 	}
@@ -461,6 +462,7 @@ function parse_level($datas) {
 	return [
 		'name' 		=> (isset($datas['name'])) ? $datas['name'] : $datas['slug'],
 		'slug'		=> $datas['slug'],
+		'content'	=> $datas['content'],
 		'parent'	=> (isset($datas['parent'])) ? $datas['parent'] : '',
 		'bounds'	=> [
 			'top'			=> (isset($datas['bounds']['top'])) ? intval($datas['bounds']['top']) : 0,

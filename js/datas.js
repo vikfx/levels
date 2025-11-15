@@ -8,6 +8,7 @@ export class Datas {
 	tile				//tile rattaché aux datas
 	_name				//nom en local
 	path				//chemin
+	content				//contenu description de la tile
 	datas				//le tableau des autres datas
 
 	//init
@@ -73,6 +74,11 @@ export class Datas {
 
 		$c.x.innerHTML = this.tile.x
 		$c.y.innerHTML = this.tile.y
+		
+		$c.content.value = this.content ?? ''
+		$c.content.addEventListener('change', evt => {
+			this.content = evt.target.value
+		})
 
 		$c.ref.value = this.tile.ref
 		$c.ref.addEventListener('change', evt => {
@@ -214,6 +220,7 @@ export class Datas {
 		//infos
 		$c = Datas.$containers.infos
 		$c.name.value = ''
+		$c.content.value = ''
 		$c.x.innerHTML = ''
 		$c.y.innerHTML = ''
 		$c.ref.value = ''
@@ -396,8 +403,12 @@ export class Datas {
 					break
 			}
 		})
+
+		//name
 		if(this._name != '') json.name = this._name
 
+		//content
+		if(this.content && this.content != '') json.content = this.content
 
 		return json
 	}
@@ -423,6 +434,9 @@ export class Datas {
 				case 'path' :
 					this.path = new Path(this.tile, v.points, v.color)
 					break
+
+				case 'content' :
+					this.content = v
 
 				case 'name' :
 					this.name = v 
@@ -471,11 +485,12 @@ export class Datas {
 		const $infos = document.querySelector('#tile-infos')
 		if(!$infos) throw new Error('pas de container pour les infos de la tile')
 		const $iname = $infos.querySelector('input[name=tile-name]')
+		const $icontent = $infos.querySelector('textarea[name=tile-content]')
 		const $ix = $infos.querySelector('.pos-x span')
 		const $iy = $infos.querySelector('.pos-y span')
 		const $idelete = $infos.querySelector('button[data-action=delete]')
 		const $iref = $infos.querySelector('select[name=reference]')
-		if(!$iname || !$ix || !$iy || !$idelete || !$iref) throw new Error('le containers #tile-infos ne contient pas les elements adequats')
+		if(!$iname || !$icontent || !$ix || !$iy || !$idelete || !$iref) throw new Error('le containers #tile-infos ne contient pas les elements adequats')
 			
 		//relation
 		const $relation = document.querySelector('#tile-relation')
@@ -517,6 +532,7 @@ export class Datas {
 			infos 		: {
 				container	: $infos,
 				name 		: $iname,
+				content 	: $icontent,
 				x 			: $ix,
 				y 			: $iy,
 				delete 		: $idelete,

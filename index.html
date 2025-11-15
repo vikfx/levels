@@ -62,9 +62,11 @@
 					<a href="#palettes" data-canvas="level">Palettes</a>
 					<a href="#layers" data-canvas="level">Layers</a>
 					<a href="#tiles" data-canvas="level">Tile</a>
+					<a href="#description">Description</a>
 				</nav>
 			</header>
 
+			<!-- #toolbar -->
 			<section id="toolbar">
 				<ul id="history-tools" class="tools">
 					<li class="button" data-action="undo" title="undo">undo</li>
@@ -81,8 +83,8 @@
 					<li class="button" data-action="erase" title="gomme">gomme</li>
 					<li class="button default" data-action="select" title="select">selecteur</li>
 				</ul>
-			</section>
-
+			</section> <!-- /#toolbar -->
+			
 			<section id="tabs">
 				<!-- #palettes -->
 				<div id="palettes" class="tab">
@@ -208,6 +210,8 @@
 						</div>
 						<select name="reference"></select>
 						<button data-action="delete">delete</button>
+
+						<textarea name="tile-content" placeholder="description de la tile"></textarea>
 					</div>
 					
 					<div id="tile-relation">
@@ -270,6 +274,11 @@
 						</form>
 					</div>
 				</div> <!-- /#tiles -->
+
+				<!-- #description -->
+				<div id="description" class="tab">
+					<textarea id="level-content" placeholder="description du level"></textarea>
+				</div>
 			</section>
 
 		</aside>
