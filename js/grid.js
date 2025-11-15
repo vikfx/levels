@@ -795,7 +795,7 @@ export class Grid {
 		const ta = relation.tileA
 		const tb = relation.tileB
 		
-		if(!Grid.inBounds(ta.position, bo) && !Grid.inBounds(tb.position, bo)) return
+		//if(!Grid.inBounds(ta.position, bo) && !Grid.inBounds(tb.position, bo)) return
 		
 		const a = this.gridToPixel(ta.x, ta.y, z)
 		const b = this.gridToPixel(tb.x, tb.y, z)
