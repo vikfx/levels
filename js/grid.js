@@ -175,8 +175,8 @@ export class Grid {
 					case 'paste' : 
 						if(!this.clipboard || !this.clipboard.tiles || this.clipboard.tiles.length < 1) break
 
-						const dx = sel.x - this.clipboard.tiles[0].x
-						const dy = sel.y - this.clipboard.tiles[0].y
+						const dx = sel.x - this.clipboard.tiles[0].position.x
+						const dy = sel.y - this.clipboard.tiles[0].position.y
 						hist = {
 							tiles 		: {
 								removed 	: [], 
@@ -195,8 +195,8 @@ export class Grid {
 						console.log(this.clipboard)
 
 						this.clipboard.tiles.forEach(tile => {
-							const x = tile.x + dx
-							const y = tile.y + dy
+							const x = tile.position.x + dx
+							const y = tile.position.y + dy
 							const s = {x, y, w: 1, h : 1}
 							action = {layer}
 							if(tile instanceof Tile) {
@@ -227,9 +227,9 @@ export class Grid {
 								relations.forEach(r => {
 									let tb
 									if(this.clipboard.tiles.includes(r.other(tile)))
-										tb = clone.layer.findTileAt(r.other(tile).x + dx, r.other(tile).y + dy)
+										tb = clone.layer.findTileAt(r.other(tile).position.x + dx, r.other(tile).position.y + dy)
 									else
-										tb = clone.layer.findTileAt(r.other(tile).x, r.other(tile).y)
+										tb = clone.layer.findTileAt(r.other(tile).position.x, r.other(tile).position.y)
 
 									if(tb) {
 										const rel = clone.layer.addRelation(clone, tb)
@@ -253,10 +253,10 @@ export class Grid {
 						//nouvelle selection
 						const current = (hist.tiles.added.length > 0) ? hist.tiles.added[0] : false
 						const selection = {
-							x: this.clipboard.tiles[0].x + dx, 
-							y: this.clipboard.tiles[0].y + dy,
-							w: this.clipboard.tiles[this.clipboard.tiles.length - 1].x - this.clipboard.tiles[0].x + 1,
-							h: this.clipboard.tiles[this.clipboard.tiles.length - 1].y - this.clipboard.tiles[0].y + 1
+							x: this.clipboard.tiles[0].position.x + dx, 
+							y: this.clipboard.tiles[0].position.y + dy,
+							w: this.clipboard.tiles[this.clipboard.tiles.length - 1].position.x - this.clipboard.tiles[0].position.x + 1,
+							h: this.clipboard.tiles[this.clipboard.tiles.length - 1].position.y - this.clipboard.tiles[0].position.y + 1
 						}
 						this.selection = {current, tiles : hist.tiles.added, selection}
 						if(current) current.setDatasHTML()
@@ -614,7 +614,7 @@ export class Grid {
 			for(let c = sel.x; c < sel.x + sel.w; c++) {
 				const tile = layer.findTileAt(c, l)
 				if(tile) tiles.push(tile)
-				else tiles.push({x: c, y: l})
+				else tiles.push({position : {x: c, y: l}})
 			}
 		}
 		return tiles
@@ -771,7 +771,7 @@ export class Grid {
 			ctx.strokeStyle = Grid.styles.selected.current.color
 			ctx.lineWidth = Grid.styles.selected.current.width
 			ctx.fillStyle = Grid.styles.selected.multiple.color
-			const pos = this.gridToPixel(t.x, t.y, z)
+			const pos = this.gridToPixel(t.position.x, t.position.y, z)
 			if(t != sel.current) ctx.fillRect(pos.x, pos.y, z, z)
 			else ctx.strokeRect(pos.x, pos.y, z, z)
 		})
@@ -797,8 +797,8 @@ export class Grid {
 		
 		//if(!Grid.inBounds(ta.position, bo) && !Grid.inBounds(tb.position, bo)) return
 		
-		const a = this.gridToPixel(ta.x, ta.y, z)
-		const b = this.gridToPixel(tb.x, tb.y, z)
+		const a = this.gridToPixel(ta.position.x, ta.position.y, z)
+		const b = this.gridToPixel(tb.position.x, tb.position.y, z)
 		a.x += z/2
 		a.y += z/2
 		b.x += z/2
@@ -824,8 +824,8 @@ export class Grid {
 		const z = this.zoom
 
 		//delta
-		const dx = path.tile.x + .5
-		const dy = path.tile.y + .5
+		const dx = path.tile.position.x + .5
+		const dy = path.tile.position.y + .5
 
 		ctx.strokeStyle = path.color || Grid.styles.path.color
 		ctx.lineWidth = Grid.styles.path.width * (z / this.zoomMax)

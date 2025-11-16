@@ -13,10 +13,11 @@ export class Tile {
 	//_name			//nom de la tile
 
 	constructor(x, y, ref, layer, datas = {}) {
-		this.x = x
-		this.y = y
-		this.ref = ref
 		this.layer = layer
+
+		this.position = {x, y}
+
+		this.ref = ref
 
 		this.datas = new Datas(datas, this)
 	}
@@ -31,9 +32,24 @@ export class Tile {
 		this.datas.name = value
 	}
 
-	//renvoyer la position de la tile en {x, y}
+	//renvoyer la position de la tile en {x, y} dans le monde
 	get position() {
-		return {x : this.x, y : this.y}
+		return {
+			x : this.x + this.layer.level.bounds.left, 
+			y : this.y + this.layer.level.bounds.top
+		}
+	}
+
+	//attribuer la position {x, y} de la tile dans le monde
+	set position(value) {
+		this.x = value.x - this.layer.level.bounds.left
+		this.y = value.y - this.layer.level.bounds.top
+	}
+	
+	//attribuer la position {x, y} de la tile dans le monde
+	setPosition(x, y) {
+		this.x = x - this.layer.level.bounds.left
+		this.y = y - this.layer.level.bounds.top
 	}
 
 	//supprimer le html
@@ -47,15 +63,15 @@ export class Tile {
 	createHTML($parent) {
 		const $li = document.createElement('li')
 		$li.classList.add('tile')
-		$li.dataset.x = this.x
-		$li.dataset.y = this.y
+		$li.dataset.x = this.position.x
+		$li.dataset.y = this.position.y
 		$li.dataset.ref = this.ref
 		
 		const $img = document.createElement('img')
 		if(this.model) $img.setAttribute('src', this.model.src)
 
 		const $h = document.createElement('h5')
-		if(this.model) $h.innerHTML = 'tile (' + this.x + ',' + this.y + ')'
+		if(this.model) $h.innerHTML = 'tile (' + this.position.x + ',' + this.position.y + ')'
 
 		const $select = document.createElement('button')
 		$select.dataset.action = 'select'

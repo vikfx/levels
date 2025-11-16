@@ -60,10 +60,10 @@ export class Chunks {
 
 	//ajouter une tile au tableau des tiles
 	push(tile) {
-		let chunk = this.getChunkAt(tile.x, tile.y)
+		let chunk = this.getChunkAt(tile.position.x, tile.position.y)
 
 		if(!chunk) {
-			const pos = this.XYtoLC(tile.x, tile.y)
+			const pos = this.XYtoLC(tile.position.x, tile.position.y)
 			
 			this.map.set(pos.key, {
 				key : pos.key,
@@ -84,7 +84,7 @@ export class Chunks {
 
 	//enlever une tile du tableau des tiles
 	pop(tile) {
-		const chunk = this.getChunkAt(tile.x, tile.y)
+		const chunk = this.getChunkAt(tile.position.x, tile.position.y)
 
 		if(!chunk) return -1
 		
@@ -97,7 +97,7 @@ export class Chunks {
 		}
 
 		if(chunk.tiles.length <= 0) {
-			const pos = this.XYtoLC(tile.x, tile.y)
+			const pos = this.XYtoLC(tile.position.x, tile.position.y)
 			this.map.delete(pos.key)
 		}
 
@@ -110,7 +110,7 @@ export class Chunks {
 		if(!chunk || !chunk.tiles) return
 
 		return chunk.tiles.find(tile => {
-			return tile.x == x && tile.y == y
+			return tile.position.x == x && tile.position.y == y
 		})
 	}
 
@@ -161,7 +161,7 @@ export class Chunks {
 
 	//dessiner une tile
 	drawTile(tile, z, ctx) {
-		const pos = this.worldToChunk(tile.x, tile.y)
+		const pos = this.worldToChunk(tile.position.x, tile.position.y)
 		if (pos.x >= this.chunkSize || pos.y >= this.chunkSize) {
 			console.log('les coordonnées de la tile sont en dehors des limites')
 			return

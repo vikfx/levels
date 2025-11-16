@@ -29,7 +29,9 @@ export class Layer {
 		this.relations = []
 		this.pathes = []
 		tiles.forEach(t => {
-			return this.addTile(t.x, t.y, t.model, t.datas)
+			const x = t.x + this.level.bounds.left
+			const y = t.y + this.level.bounds.top
+			return this.addTile(x, y, t.model, t.datas)
 		})
 	}
 
@@ -173,8 +175,8 @@ export class Layer {
 		let tile
 		if (x instanceof Tile) {
 			tile = x
-			x = tile.x
-			y = tile.y
+			x = tile.position.x
+			y = tile.position.y
 			tile.layer = this
 		} else {
 			if(isNaN(x) || isNaN(y) || !model) return false

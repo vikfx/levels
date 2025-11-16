@@ -19,12 +19,12 @@ export class Datas {
 
 	//renvoyer le nom de la tile
 	get name() {
-		return (this._name) ? this._name : 'tile (' + this.tile.x + ', ' + this.tile.y + ')'
+		return (this._name) ? this._name : 'tile (' + this.tile.position.x + ', ' + this.tile.position.y + ')'
 	}
 
 	//attribuer un nom à la tile
 	set name(value) {
-		this._name = (value != 'tile (' + this.tile.x + ', ' + this.tile.y + ')') ? value : ''
+		this._name = (value != 'tile (' + this.tile.position.x + ', ' + this.tile.position.y + ')') ? value : ''
 	}
 
 	//revoyer la liste des relations
@@ -72,8 +72,8 @@ export class Datas {
 			this.name = evt.target.value
 		})
 
-		$c.x.innerHTML = this.tile.x
-		$c.y.innerHTML = this.tile.y
+		$c.x.innerHTML = this.tile.position.x
+		$c.y.innerHTML = this.tile.position.y
 		
 		$c.content.value = this.content ?? ''
 		$c.content.addEventListener('change', evt => {
@@ -265,8 +265,8 @@ export class Datas {
 			if(grid.selection.tiles.indexOf(tile) < 0) {
 				grid.selection.tiles = [tile]
 				grid.selection.selection = {
-					x: tile.x, 
-					y: tile.y,
+					x: tile.position.x, 
+					y: tile.position.y,
 					w: 1,
 					h: 1
 				}
@@ -424,8 +424,8 @@ export class Datas {
 						const ly = this.tile.layer
 						const r = relation.split(',')
 						if(r.length != 2) return
-						const x = Number(r[0])
-						const y = Number(r[1])
+						const x = Number(r[0]) + this.tile.layer.level.bounds.left
+						const y = Number(r[1]) + this.tile.layer.level.bounds.top
 						const tb = ly.findTileAt(x, y)
 						if(tb) ly.addRelation(this.tile, tb)
 					})
