@@ -248,6 +248,44 @@ export class World {
 		})
 	}
 
+	//dessiner l'interieur du level
+	printLevel(level, width = 4096, height = 4096) {
+		//calculer la taille de l'unité
+		const size = (width / level.width < height / level.height) 
+		? width / level.width
+		: height / level.height
+
+		const $canvas = new OffscreenCanvas(level.width * size, level.height * size)
+		const ctx = $canvas.getContext('2d')
+		
+		//layers
+		level.layers.forEach(layer => {
+			layer.draw(level.bounds, size, ctx)
+		})
+
+		
+		//etiquettes
+		ctx.strokeStyle = World.styles.level.color
+		ctx.fillStyle = World.styles.level.color
+		ctx.lineWidth = World.styles.level.width
+		ctx.font = World.styles.level.text
+		ctx.fillText(level.name, 15, 15)
+		ctx.fillText(level.width + ', ' + level.height + ' (1:' + size + ')', 15, 30)
+		
+		//contour
+		ctx.strokeRect(0, 0, level.width * size, level.height * size)
+		
+		$canvas.convertToBlob().then(blob => {
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+  			link.download = level.slug + '.png';
+  			link.href = url;
+  			link.click();
+  			link.delete;
+		})
+	}
+
+
 	//convertir en tableau json
 	toJSON(withLevels = false) {
 		return {

@@ -97,6 +97,17 @@ export class Level {
 			World.getInstance().drawLevel(this)
 		})
 
+		//dessiner
+		const $print = document.createElement('button')
+		$print.dataset.action = 'print'
+		$print.innerHTML = 'print'
+		$print.addEventListener('click', evt => {
+			evt.preventDefault()
+
+			World.getInstance().printLevel(this)
+		})
+		
+
 		//bounds
 		const $ul = document.createElement('ul')
 		$ul.classList.add('bounds')
@@ -131,6 +142,7 @@ export class Level {
 		$li.appendChild($edit)
 		$li.appendChild($draw)
 		$li.appendChild($delete)
+		$li.appendChild($print)
 		$li.appendChild($ul)
 
 		World.$containers.levels.appendChild($li)
