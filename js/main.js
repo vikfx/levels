@@ -210,7 +210,7 @@ function saveJSON(project) {
 	let numOfReq = 1
 	FetchAPI.$loader.hidden = false
 	let url = FetchAPI.apiURL + 'project/' + project
-	let datas = levelDesign.world.toJSON()
+	let datas = (levelDesign) ? levelDesign.world.toJSON() : getEmptyWorldJSON();
 	FetchAPI.fetch(url, 'POST', {world : datas}, (output) => {
 		console.log(output)
 		numOfReq--
@@ -218,6 +218,7 @@ function saveJSON(project) {
 	})
 
 	//levels
+	if(!levelDesign || !levelDesign.world || !levelDesign.world.levels) return
 	levelDesign.world.levels.forEach(level => {
 		if(!level.edited) return
 
@@ -285,6 +286,20 @@ function manageTabs() {
 
 		})
 	})
+}
+
+//renvoyer un tableau du monde vide en json
+function getEmptyWorldJSON() {
+	return {
+		"settings": {
+			"palettes": []
+		},
+		"world" : {
+			"width": 0,
+			"height": 0,
+			"levels": []
+		}
+	}
 }
 
 
